@@ -76,7 +76,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)/Include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)/Include;$(ProjectDir)/includes;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)/Libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -146,12 +146,22 @@
   <ItemGroup>
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Include\glad\glad.h" />
     <ClInclude Include="..\Include\GLFW\glfw3.h" />
     <ClInclude Include="..\Include\GLFW\glfw3native.h" />
     <ClInclude Include="..\Include\KHR\khrplatform.h" />
+    <ClInclude Include="includes\shader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\shader.frag" />
+    <None Include="shaders\shader.vert" />
+    <None Include="shaders\shader_color_attribute.frag" />
+    <None Include="shaders\shader_color_attribute.vert" />
+    <None Include="shaders\shader_uniform.frag" />
+    <None Include="shaders\shader_uniform.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

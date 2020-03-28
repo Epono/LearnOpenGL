@@ -13,27 +13,59 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Dependencies">
+      <UniqueIdentifier>{f8bbbbcf-746e-4631-bbf9-9b45196ff895}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Dependencies">
+      <UniqueIdentifier>{b7c8e3e4-1236-491d-8a12-a23453830596}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\glad.c">
+    <ClCompile Include="src\shader.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\glad.c">
+      <Filter>Source Files\Dependencies</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Include\glad\glad.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Dependencies</Filter>
     </ClInclude>
     <ClInclude Include="..\Include\GLFW\glfw3.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Dependencies</Filter>
     </ClInclude>
     <ClInclude Include="..\Include\GLFW\glfw3native.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Dependencies</Filter>
     </ClInclude>
     <ClInclude Include="..\Include\KHR\khrplatform.h">
+      <Filter>Header Files\Dependencies</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\shader.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader_uniform.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader_uniform.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader_color_attribute.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader_color_attribute.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
