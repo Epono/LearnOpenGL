@@ -21,7 +21,6 @@
 #include <shader.h>
 
 
-
 float keyRepeatDelay = 0.5f;
 float keyRepeatSpacing = 0.05f;
 bool keys[350] = { false };
@@ -34,16 +33,9 @@ unsigned int texture[2];
 std::map<std::string, Shader> shaders;
 
 
-
-float	greenValue = 1.0f;
-
 ImVec4	backgroundColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-bool	drawF = true;
-bool	drawGayTriangle = true;
-bool	drawRectangle = true;
 bool	drawTexturedRectangle = true;
-
 float	mixValue = 0.2;
 
 int main() {
@@ -126,128 +118,10 @@ int main() {
 }
 
 void createOpenGLObjects() {
-	glGenVertexArrays(5, VAO);
-	glGenBuffers(4, VBO);
-	glGenBuffers(5, EBO);
+	glGenVertexArrays(1, VAO);
+	glGenBuffers(1, VBO);
+	glGenBuffers(1, EBO);
 	glGenTextures(2, texture);
-
-	// 
-	float verticesRectangle[] = {
-		 0.9f,  0.9f, 0.0f,  // top right
-		 0.9f,  0.5f, 0.0f,  // bottom right
-		 0.5f,  0.5f, 0.0f,  // bottom left
-		 0.5f,  0.9f, 0.0f   // top left 
-	};
-
-	unsigned int indicesRectangle[] = {  // note that we start from 0!
-		0, 1, 3,   // first triangle
-		1, 2, 3    // second triangle
-	};
-
-	// RECTANGLE
-	glBindVertexArray(VAO[0]);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesRectangle), verticesRectangle, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesRectangle), indicesRectangle, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float) /* could be 0 too */, (void*)0);
-	glEnableVertexAttribArray(0);
-
-	// TRIANGLE
-	float verticesTriangle[] = {
-		// positions         // colors
-		 0.1f, -0.9f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-		-0.1f, -0.9f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-		 0.0f, -0.7f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
-	};
-
-	unsigned int indicesTriangle[] = {
-		0, 1, 2,
-	};
-
-	glBindVertexArray(VAO[1]);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesTriangle), verticesTriangle, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesTriangle), indicesTriangle, GL_STATIC_DRAW);
-
-	// Positions
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float) /* could be 0 too */, (void*)0);
-	glEnableVertexAttribArray(0);
-
-	// Colors
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float) /* could be 0 too */, (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	// Unbind (optional if rebind after, but safer)
-	//glBindVertexArray(0);
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	float verticesF[] = {
-		 -0.2f, 0.5f, 0.0f,
-		 0.0f, 0.5f, 0.0f,
-		 0.5f, 0.5f, 0.0f,
-		 0.5f, 0.4f, 0.0f,
-		 0.0f, 0.4f, 0.0f,
-		 0.0f, 0.0f, 0.0f,
-		 0.3f, 0.0f, 0.0f,
-		 0.3f, -0.1f, 0.0f,
-		 0.0f, -0.1f, 0.0f,
-		 0.0f, -0.5f, 0.0f,
-		 -0.2f, -0.5f, 0.0f
-	};
-
-	unsigned int indicesF0[] = {
-		0, 1, 10,
-		1, 2, 4,
-		6, 7, 8
-	};
-
-	unsigned int indicesF1[] = {
-		1, 9, 10,
-		2, 3, 4,
-		5, 6, 8
-	};
-
-	glBindVertexArray(VAO[2]);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesF), verticesF, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[2]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesF0), indicesF0, GL_STATIC_DRAW);
-
-	// 0 == layout location.
-	// 3 == nb item for the attribute (x, y, z)
-	// GL_FLOAT == type
-	// GL_FALSE == whether to normalize
-	// 0 / size == stride between next attribute
-	// 0 == offset
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float) /* could be 0 too */, (void*)0);
-	glEnableVertexAttribArray(0);
-
-
-	glBindVertexArray(VAO[3]);
-
-	//glGenBuffers(1, &VBO3);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[3]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesF1), indicesF1, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float) /* could be 0 too */, (void*)0);
-	glEnableVertexAttribArray(0);
-
-
-
-
 
 	// Textured rectange
 	float verticesTexturedRectangle[] = {
@@ -263,12 +137,12 @@ void createOpenGLObjects() {
 		1, 2, 3    // second triangle
 	};
 
-	glBindVertexArray(VAO[4]);
+	glBindVertexArray(VAO[0]);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesTexturedRectangle), verticesTexturedRectangle, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[4]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesTexturedRectangle), indicesTexturedRectangle, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -280,53 +154,8 @@ void createOpenGLObjects() {
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-
-	//glActiveTexture(GL_TEXTURE0); // optional, good practice
-	//glBindTexture(GL_TEXTURE_2D, texture[0]);
-
-	//// set texture wrapping/filtering options on currently bound texture
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	//// load and generate texture
-	//int width, height, nrChannels;
-	//unsigned char* data = stbi_load("assets/container.jpg", &width, &height, &nrChannels, 0);
-	//if (data) {
-	//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	//	glGenerateMipmap(GL_TEXTURE_2D);
-	//}
-	//else {
-	//	std::cout << "Failed to load texture" << std::endl;
-	//}
-	//stbi_image_free(data);
 	createTexture(GL_TEXTURE0, texture[0], "assets/container.jpg", GL_RGB, GL_RGB);
-
-	//glActiveTexture(GL_TEXTURE1);
-	//glBindTexture(GL_TEXTURE_2D, texture[1]);
-
-	//// set texture wrapping/filtering options on currently bound texture
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	//// load and generate texture
-	////int width, height, nrChannels;
-	//data = stbi_load("assets/awesomeface.png", &width, &height, &nrChannels, 0);
-	//if (data) {
-	//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	//	glGenerateMipmap(GL_TEXTURE_2D);
-	//}
-	//else {
-	//	std::cout << "Failed to load texture" << std::endl;
-	//}
-	//stbi_image_free(data);
 	createTexture(GL_TEXTURE1, texture[1], "assets/awesomeface.png", GL_RGBA, GL_RGBA);
-
-
-
 
 	// Unbind
 	glBindVertexArray(0);
@@ -371,42 +200,12 @@ void createShaders() {
 	shaders.insert(std::make_pair("shader_color_attribute", shader_color_attribute));
 	shaders.insert(std::make_pair("shader_texture", shader_texture));
 }
+
 void render(const double currentTime) {
 	glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	if (drawRectangle) {
-		// Rectangle
-		shaders.find("default_shader")->second.use();
-		glBindVertexArray(VAO[0]);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		//glBindVertexArray(0);
-	}
-
-	if (drawGayTriangle) {
-		// Bottom Triangle
-		shaders.find("shader_color_attribute")->second.use();
-		glBindVertexArray(VAO[1]);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-		//glBindVertexArray(0);
-	}
-
-	if (drawF) {
-		// Red F
-		shaders.find("default_shader")->second.use();
-		glBindVertexArray(VAO[2]);
-		glDrawElements(GL_TRIANGLES, 11, GL_UNSIGNED_INT, 0);
-		//glBindVertexArray(0);
-
-		// Green F
-		shaders.find("shader_uniform")->second.use();
-		/*float greenValue2 = (sin(currentTime) / 2.0f) + 0.5f;*/
-		shaders.find("shader_uniform")->second.setFloat4("ourColor", 0.0f, greenValue, 0.0f, 1.0f);
-		glBindVertexArray(VAO[3]);
-		glDrawElements(GL_TRIANGLES, 11, GL_UNSIGNED_INT, 0);
-		//glBindVertexArray(0);
-	}
-
+	// Render OpenGL
 	if (drawTexturedRectangle) {
 		// Textured Triangle
 		Shader& shader_texture = shaders.find("shader_texture")->second;
@@ -416,73 +215,30 @@ void render(const double currentTime) {
 		glBindTexture(GL_TEXTURE_2D, texture[0]);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture[1]);
-		glBindVertexArray(VAO[4]);
+		glBindVertexArray(VAO[0]);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		//glBindVertexArray(0);
 	}
-
 	glBindVertexArray(0);
 
 
-
-	// start the Dear ImGui frame
+	// Render Dear Imgui
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	// a window is defined by Begin/End pair
-	{
-		static int counter = 0;
-
-		// position the controls widget in the top-right corner with some margin
-		ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
-		// create the window and append into it
-		ImGui::Begin("Info", nullptr, ImGuiWindowFlags_None);
-
-		ImGui::Dummy(ImVec2(0.0f, 1.0f));
-		ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), "Platform");
-		ImGui::Text("%s", "Windows lol");
-		ImGui::Text("CPU cores: %d", std::thread::hardware_concurrency());
-		ImGui::Text("RAM: %.2f GB", "SDL_GetSystemRAM() / 1024.0f");
-
-		// buttons and most other widgets return true when clicked/edited/activated
-		if (ImGui::Button("Counter button"))
-		{
-			counter++;
-		}
-		ImGui::SameLine();
-		ImGui::Text("counter = %d", counter);
-		static float v[5] = { 0.390f, 0.575f, 0.565f, 1.000f };
-		ImGui::Bezier("easeInOutQuint", v);       // draw
-		float y = ImGui::BezierValue(0.5f, v); // x delta in [0..1] range
-		ImGui::End();
-
-
-
-		ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
-		// create the window and append into it
-		ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_None);
-
-		if (ImGui::CollapsingHeader("Colors"))
-		{
-			ImGui::SliderFloat("Green value", &greenValue, 0.0f, 1.0f);
-			ImGui::Separator();
-			ImGui::ColorEdit4("Background color", (float*)&backgroundColor, ImGuiColorEditFlags_Float);
-		}
-
-		if (ImGui::CollapsingHeader("Draws", ImGuiTreeNodeFlags_DefaultOpen)) {
-			ImGui::Checkbox("Draw F?", &drawF);
-			ImGui::Checkbox("Draw Gay Triangle?", &drawGayTriangle);
-			ImGui::Checkbox("Draw Rectangle?", &drawRectangle);
-			ImGui::Checkbox("Draw Textured Rectangle?", &drawTexturedRectangle);
-			ImGui::SliderFloat("Mix Value", &mixValue, 0.0f, 1.0f);
-		}
-		ImGui::End();
+	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_None);
+	if (ImGui::CollapsingHeader("Colors")) {
+		ImGui::ColorEdit4("Background color", (float*)&backgroundColor, ImGuiColorEditFlags_Float);
 	}
 
-	// rendering
+	if (ImGui::CollapsingHeader("Draws", ImGuiTreeNodeFlags_DefaultOpen)) {
+		ImGui::Checkbox("Draw Textured Rectangle?", &drawTexturedRectangle);
+		ImGui::SliderFloat("Mix Value", &mixValue, 0.0f, 1.0f);
+	}
+	ImGui::End();
+
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
