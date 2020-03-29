@@ -171,12 +171,15 @@
     <ClInclude Include="..\Include\KHR\khrplatform.h" />
     <ClInclude Include="..\Include\stb_image\stb_image.h" />
     <ClInclude Include="includes\shader.h" />
+    <ClInclude Include="includes\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\shader.frag" />
     <None Include="shaders\shader.vert" />
     <None Include="shaders\shader_color_attribute.frag" />
     <None Include="shaders\shader_color_attribute.vert" />
+    <None Include="shaders\shader_texture.frag" />
+    <None Include="shaders\shader_texture.vert" />
     <None Include="shaders\shader_uniform.frag" />
     <None Include="shaders\shader_uniform.vert" />
   </ItemGroup>

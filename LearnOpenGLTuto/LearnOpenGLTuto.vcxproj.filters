@@ -104,6 +104,9 @@
     <ClInclude Include="..\Include\stb_image\stb_image.h">
       <Filter>Header Files\Dependencies</Filter>
     </ClInclude>
+    <ClInclude Include="includes\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\shader.vert">
@@ -122,6 +125,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\shader_color_attribute.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader_texture.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader_texture.vert">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
