@@ -39,12 +39,13 @@ void showImguiDemo()
 	ImGui::End();
 }
 
-void processInput(GLFWwindow* window);
+void processInput(GLFWwindow* window, float deltaTime);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void createOpenGLObjects();
 void cleanUp();
 void createShaders();
-void render(const double currentTime);
+void render();
 void createTexture(GLenum activeTexture, GLuint textureID, const std::string& texturePath, GLint internalFormat, GLenum format);
 
 // Too much "callbacky", better to manually check each frame?
