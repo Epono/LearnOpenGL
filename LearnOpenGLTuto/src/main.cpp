@@ -10,6 +10,10 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui_bezier.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <stb_image/stb_image.h>
 
 #include <iostream>
@@ -27,6 +31,8 @@ bool keys[350] = { false };
 
 int width = 800;
 int height = 600;
+float fov = 45.0f;
+float aspectRatio = (float) width / height;
 
 unsigned int VAO[5], VBO[4], EBO[5];
 unsigned int texture[2];
@@ -36,6 +42,7 @@ std::map<std::string, Shader> shaders;
 ImVec4	backgroundColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 bool	drawTexturedRectangle = true;
+bool	drawTexturedCube = true;
 float	mixValue = 0.2;
 
 int main() {
@@ -64,6 +71,8 @@ int main() {
 	// If smaller than window, takes only a fraction of the window
 	glViewport(0, 0, width, height);
 
+	glEnable(GL_DEPTH_TEST);
+
 	// Callbacks
 	glfwSetFramebufferSizeCallback(window.get(), framebuffer_size_callback);
 
@@ -89,6 +98,7 @@ int main() {
 	std::string glsl_version = "#version 330";
 	ImGui_ImplGlfw_InitForOpenGL(window.get(), true);
 	ImGui_ImplOpenGL3_Init(glsl_version.c_str());
+
 
 
 	double previousTime = glfwGetTime();
@@ -118,8 +128,8 @@ int main() {
 }
 
 void createOpenGLObjects() {
-	glGenVertexArrays(1, VAO);
-	glGenBuffers(1, VBO);
+	glGenVertexArrays(2, VAO);
+	glGenBuffers(2, VBO);
 	glGenBuffers(1, EBO);
 	glGenTextures(2, texture);
 
@@ -153,6 +163,63 @@ void createOpenGLObjects() {
 
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
+
+
+	float verticesCube[] = {
+	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+	};
+
+	glBindVertexArray(VAO[1]);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCube), verticesCube, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
 
 	createTexture(GL_TEXTURE0, texture[0], "assets/container.jpg", GL_RGB, GL_RGB);
 	createTexture(GL_TEXTURE1, texture[1], "assets/awesomeface.png", GL_RGBA, GL_RGBA);
@@ -201,22 +268,81 @@ void createShaders() {
 	shaders.insert(std::make_pair("shader_texture", shader_texture));
 }
 
+float angleTemp = -90.0f;
+float positionTemp[] = { 0.0f, -5.0f, -5.0f };
+float cameraPosition[] = { 0.0f, 1.0f, -10.0f };
+
 void render(const double currentTime) {
 	glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+	glm::mat4 view = glm::mat4(1.0f);
+	view = glm::translate(view, glm::vec3(cameraPosition[0], cameraPosition[1], cameraPosition[2]));
+	glm::mat4 projection = glm::perspective(glm::radians(fov), aspectRatio, 0.1f, 100.0f);
 
 	// Render OpenGL
 	if (drawTexturedRectangle) {
-		// Textured Triangle
 		Shader& shader_texture = shaders.find("shader_texture")->second;
 		shader_texture.use();
 		shader_texture.setFloat("mixValue", mixValue);
+
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture[0]);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture[1]);
 		glBindVertexArray(VAO[0]);
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(positionTemp[0], positionTemp[1], positionTemp[2]));
+		model = glm::rotate(model, glm::radians(angleTemp), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(5.0f, 5.0f, 0.0f));
+
+		shader_texture.setMatrixFloat4v("model", 1, model);
+		shader_texture.setMatrixFloat4v("view", 1, view);
+		shader_texture.setMatrixFloat4v("projection", 1, projection);
+
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	}
+	if (drawTexturedCube) {
+		Shader& shader_texture = shaders.find("shader_texture")->second;
+		shader_texture.use();
+		shader_texture.setFloat("mixValue", mixValue);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture[0]);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture[1]);
+		glBindVertexArray(VAO[1]);
+
+		shader_texture.setMatrixFloat4v("view", 1, view);
+		shader_texture.setMatrixFloat4v("projection", 1, projection);
+
+		glm::vec3 cubePositions[] = {
+			glm::vec3(0.0f,  0.0f,  0.0f),
+			glm::vec3(2.0f,  5.0f, -15.0f),
+			glm::vec3(-1.5f, -2.2f, -2.5f),
+			glm::vec3(-3.8f, -2.0f, -12.3f),
+			glm::vec3(2.4f, -0.4f, -3.5f),
+			glm::vec3(-1.7f,  3.0f, -7.5f),
+			glm::vec3(1.3f, -2.0f, -2.5f),
+			glm::vec3(1.5f,  2.0f, -2.5f),
+			glm::vec3(1.5f,  0.2f, -1.5f),
+			glm::vec3(-1.3f,  1.0f, -1.5f)
+		};
+
+		for (int i = 0; i < 10; ++i) {
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, cubePositions[i]);
+			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(30.0f) + 30 * i, glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f) + 20 * i, glm::vec3(0.0f, 1.0f, 0.0f));
+			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(10.0f) + 10 * i, glm::vec3(0.0f, 0.0f, 1.0f));
+			shader_texture.setMatrixFloat4v("model", 1, model);
+
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+
 	}
 	glBindVertexArray(0);
 
@@ -235,7 +361,12 @@ void render(const double currentTime) {
 
 	if (ImGui::CollapsingHeader("Draws", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::Checkbox("Draw Textured Rectangle?", &drawTexturedRectangle);
+		ImGui::Checkbox("Draw Textured Cube?", &drawTexturedCube);
 		ImGui::SliderFloat("Mix Value", &mixValue, 0.0f, 1.0f);
+		ImGui::SliderFloat("FOV", &fov, 10.0f, 180.0f);
+		ImGui::DragFloat3("Plane position", positionTemp, 0.1f, -10.0f, 10.0f);
+		ImGui::SliderFloat("Plane angle", &angleTemp, -180.0f, 180.0f);
+		ImGui::DragFloat3("Camera position", cameraPosition, 0.1f, -10.0f, 10.0f);
 	}
 	ImGui::End();
 
