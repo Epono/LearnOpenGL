@@ -166,6 +166,7 @@
     <ClCompile Include="..\Include\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\Include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\Include\stb_image\stb_image.cpp" />
+    <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\shader.cpp" />
   </ItemGroup>
@@ -184,6 +185,7 @@
     <ClInclude Include="..\Include\imgui_bezier.h" />
     <ClInclude Include="..\Include\KHR\khrplatform.h" />
     <ClInclude Include="..\Include\stb_image\stb_image.h" />
+    <ClInclude Include="includes\Camera.h" />
     <ClInclude Include="includes\shader.h" />
     <ClInclude Include="includes\utils.h" />
   </ItemGroup>
@@ -192,6 +194,8 @@
     <None Include="shaders\shader.vert" />
     <None Include="shaders\shader_color_attribute.frag" />
     <None Include="shaders\shader_color_attribute.vert" />
+    <None Include="shaders\shader_simple_texture.frag" />
+    <None Include="shaders\shader_simple_texture.vert" />
     <None Include="shaders\shader_texture.frag" />
     <None Include="shaders\shader_texture.vert" />
     <None Include="shaders\shader_uniform.frag" />
