@@ -49,9 +49,26 @@ void createShaders();
 void render(double deltaTime);
 void createTexture(GLenum activeTexture, GLuint textureID, const std::string& texturePath, GLint internalFormat, GLenum format);
 
+inline float B0(float t) { return t * t * t; }
+inline float B1(float t) { return 3 * t * t * (1 - t); }
+inline float B2(float t) { return 3 * t * (1 - t) * (1 - t); }
+inline float B3(float t) { return (1 - t) * (1 - t) * (1 - t); }
+
+glm::vec2 getBezier(float t, const glm::vec2& P0, const glm::vec2& P1, const glm::vec2& P2, const glm::vec2& P3) {
+	return glm::vec2(
+		P1.x * B0(t) + P1.x * B1(t) + P2.x * B2(t) + P3.x * B3(t),
+		P1.y * B0(t) + P1.y * B1(t) + P2.y * B2(t) + P3.y * B3(t)
+	);
+}
+
+float getBezierSimplified(float t, const glm::vec2& P1, const glm::vec2& P2) {
+	return getBezier(t, glm::vec2(0.0f, 0.0f), P1, P2, glm::vec2(0.0f, 0.0f)).y;
+}
+
 // Too much "callbacky", better to manually check each frame?
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
 	}
 }
+

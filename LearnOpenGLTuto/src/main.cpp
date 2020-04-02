@@ -15,6 +15,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_interpolation.hpp>
 
 #include <stb_image/stb_image.h>
 
@@ -78,17 +79,20 @@ bool	drawCubes = true;
 bool	drawLight = true;
 float	mixValue = 0.0f;
 
-Camera camera(glm::vec3(0.0f, 1.5f, 10.0f));
+Camera camera(glm::vec3(0.0f, 2.5f, 10.0f));
 
 int main() {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_SAMPLES, 4);		// Antialiasing (MSAA)
 
 	std::unique_ptr<GLFWwindow, glfwDeleter> window;
 	if (!fullscreen) {
 		window.reset(glfwCreateWindow(width, height, "LearnOpenGL", nullptr, nullptr));
+		const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		glfwSetWindowPos(window.get(), (mode->width - width) / 2, (mode->height - height) / 2);
 	}
 	else {
 		window.reset(glfwCreateWindow(width, height, "LearnOpenGL", glfwGetPrimaryMonitor(), nullptr));
@@ -110,8 +114,13 @@ int main() {
 	glViewport(0, 0, width, height);
 	glEnable(GL_DEPTH_TEST);
 	glLineWidth(2.0f);
+
+	// Culling
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
+
+	// Antialiasing (MSAA)
+	glEnable(GL_MULTISAMPLE);
 
 	// Callbacks
 	glfwSetFramebufferSizeCallback(window.get(), framebuffer_size_callback);
@@ -368,21 +377,45 @@ void createShaders() {
 	shaders.insert(std::make_pair("shader_texture_simple", shader_texture_simple));
 }
 
-
-
-
-
 void render(double deltaTime) {
 	glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glm::mat4 view = camera.getViewMatrix();
+
+	//////////////////////// 
+	// Fun with projections
+
 	glm::mat4 projectionPerspective = glm::perspective(glm::radians(camera.FOV), aspectRatio, 0.1f, 100.0f);
 	glm::mat4 projectionOrtho = glm::ortho(
 		-aspectRatio * camera.OrthographicFactor, aspectRatio * camera.OrthographicFactor,
 		-camera.OrthographicFactor, camera.OrthographicFactor,
 		0.1f, 100.0f);
-	glm::mat4& projection = (camera.IsPerspective ? projectionPerspective : projectionOrtho);
+
+	//glm::mat4& projection = (camera.IsPerspective ? projectionPerspective : projectionOrtho);
+	// mixValue == 1 => full ortho
+	//			== 0 => full perspective
+	float epsilon = 0.01f;
+	if (camera.IsPerspective && mixValue > epsilon) {
+		mixValue -= deltaTime * 5;
+		if (mixValue <= epsilon) {
+			mixValue = 0.0f;
+		}
+	}
+	else if (!camera.IsPerspective && mixValue < 1 - epsilon) {
+		mixValue += deltaTime * 5;
+		if (mixValue >= 1 - epsilon) {
+			mixValue = 1.0f;
+		}
+	}
+	glm::mat4 projection = glm::mat4(1.0f);
+	float mixProjections = getBezierSimplified(mixValue, glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f));
+	// fun when function of time
+	projection[0] = glm::mix(projectionPerspective[0], projectionOrtho[0], mixProjections);
+	projection[1] = glm::mix(projectionPerspective[1], projectionOrtho[1], mixProjections);
+	projection[2] = glm::mix(projectionPerspective[2], projectionOrtho[2], mixProjections);
+	projection[3] = glm::mix(projectionPerspective[3], projectionOrtho[3], mixProjections);
+	//////////////////////// 
 
 	//https://gamedev.stackexchange.com/questions/43691/how-can-i-move-an-object-in-an-infinity-or-figure-8-trajectory
 	float t = glfwGetTime();
@@ -403,7 +436,7 @@ void render(double deltaTime) {
 
 		Shader& shader_texture_phong = shaders.find("shader_texture_phong")->second;
 		shader_texture_phong.use();
-		shader_texture_phong.setFloat("mixValue", mixValue);
+		shader_texture_phong.setFloat("mixValue", 0.0f);
 
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(planePosition[0], planePosition[1], planePosition[2]));
@@ -429,7 +462,7 @@ void render(double deltaTime) {
 
 		Shader& shader_texture_phong = shaders.find("shader_texture_phong")->second;
 		shader_texture_phong.use();
-		shader_texture_phong.setFloat("mixValue", mixValue);
+		shader_texture_phong.setFloat("mixValue", 0.0f);
 
 		shader_texture_phong.setMatrixFloat4v("view", 1, view);
 		shader_texture_phong.setMatrixFloat4v("projection", 1, projection);
@@ -510,9 +543,24 @@ void render(double deltaTime) {
 		glm::mat4 viewGizmo = glm::mat4(view);
 		viewGizmo[3][0] = 0.0f;
 		viewGizmo[3][1] = 0.0f;
-		viewGizmo[3][2] = -3.0f;
+		viewGizmo[3][2] = -2.5f;
 		shader_color_uniform.setMatrixFloat4v("view", 1, viewGizmo);
-		glm::mat4 projectionGizmo = glm::perspective(glm::radians(camera.FOV), 1.0f, 0.1f, 100.0f);
+
+		const float DEFAULT_FOV = 45.0f;
+		glm::mat4 projectionPerspectiveGizmo = glm::perspective(glm::radians(DEFAULT_FOV), 1.0f, 0.1f, 100.0f);
+		glm::mat4 projectionOrthoGizmo = glm::ortho(
+			-1.0f, 1.0f,
+			-1.0f, 1.0f,
+			0.1f, 100.0f);
+
+		glm::mat4 projectionGizmo = glm::mat4(1.0f);
+		float mixProjections = getBezierSimplified(mixValue, glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f));
+		// fun when function of time
+		projectionGizmo[0] = glm::mix(projectionPerspectiveGizmo[0], projectionOrthoGizmo[0], mixProjections);
+		projectionGizmo[1] = glm::mix(projectionPerspectiveGizmo[1], projectionOrthoGizmo[1], mixProjections);
+		projectionGizmo[2] = glm::mix(projectionPerspectiveGizmo[2], projectionOrthoGizmo[2], mixProjections);
+		projectionGizmo[3] = glm::mix(projectionPerspectiveGizmo[3], projectionOrthoGizmo[3], mixProjections);
+
 		shader_color_uniform.setMatrixFloat4v("projection", 1, projectionGizmo);
 
 		glm::mat4 model = glm::mat4(1.0f);
