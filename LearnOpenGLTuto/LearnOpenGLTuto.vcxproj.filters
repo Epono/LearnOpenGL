@@ -115,16 +115,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\shader.vert">
+    <None Include="shaders\shader_texture_simple.frag">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\shader.frag">
+    <None Include="shaders\shader_texture_simple.vert">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\shader_uniform.frag">
+    <None Include="shaders\shader_color_uniform.frag">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\shader_uniform.vert">
+    <None Include="shaders\shader_color_uniform.vert">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\shader_color_attribute.frag">
@@ -133,16 +133,10 @@
     <None Include="shaders\shader_color_attribute.vert">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\shader_texture.frag">
+    <None Include="shaders\shader_texture_phong.frag">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\shader_texture.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\shader_simple_texture.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\shader_simple_texture.frag">
+    <None Include="shaders\shader_texture_phong.vert">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

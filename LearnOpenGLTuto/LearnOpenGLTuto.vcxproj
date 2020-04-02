@@ -190,16 +190,14 @@
     <ClInclude Include="includes\utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\shader.frag" />
-    <None Include="shaders\shader.vert" />
     <None Include="shaders\shader_color_attribute.frag" />
     <None Include="shaders\shader_color_attribute.vert" />
-    <None Include="shaders\shader_simple_texture.frag" />
-    <None Include="shaders\shader_simple_texture.vert" />
-    <None Include="shaders\shader_texture.frag" />
-    <None Include="shaders\shader_texture.vert" />
-    <None Include="shaders\shader_uniform.frag" />
-    <None Include="shaders\shader_uniform.vert" />
+    <None Include="shaders\shader_texture_simple.frag" />
+    <None Include="shaders\shader_texture_simple.vert" />
+    <None Include="shaders\shader_texture_phong.frag" />
+    <None Include="shaders\shader_texture_phong.vert" />
+    <None Include="shaders\shader_color_uniform.frag" />
+    <None Include="shaders\shader_color_uniform.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

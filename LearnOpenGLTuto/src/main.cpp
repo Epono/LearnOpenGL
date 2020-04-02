@@ -73,6 +73,7 @@ int shininess = 32;
 
 bool	drawPlane = true;
 bool	drawCubes = true;
+bool	drawLight = true;
 float	mixValue = 0.0f;
 
 Camera camera(glm::vec3(0.0f, 1.5f, 10.0f));
@@ -305,23 +306,22 @@ void createTexture(GLenum activeTexture, GLuint textureID, const std::string& te
 }
 
 void createShaders() {
-	Shader default_shader("shaders/shader.vert", "shaders/shader.frag");
-	Shader shader_uniform("shaders/shader_uniform.vert", "shaders/shader_uniform.frag");
+	Shader shader_color_uniform("shaders/shader_color_uniform.vert", "shaders/shader_color_uniform.frag");
 	Shader shader_color_attribute("shaders/shader_color_attribute.vert", "shaders/shader_color_attribute.frag");
-	Shader shader_texture("shaders/shader_texture.vert", "shaders/shader_texture.frag");
-	shader_texture.use();
-	shader_texture.setInt("texture0", 0);
-	shader_texture.setInt("texture1", 1);
 
-	Shader shader_simple_texture("shaders/shader_simple_texture.vert", "shaders/shader_simple_texture.frag");
-	shader_simple_texture.use();
-	shader_simple_texture.setInt("texture0", 0);
+	Shader shader_texture_simple("shaders/shader_texture_simple.vert", "shaders/shader_texture_simple.frag");
+	shader_texture_simple.use();
+	shader_texture_simple.setInt("texture0", 0);
 
-	shaders.insert(std::make_pair("default_shader", default_shader));
-	shaders.insert(std::make_pair("shader_uniform", shader_uniform));
+	Shader shader_texture_phong("shaders/shader_texture_phong.vert", "shaders/shader_texture_phong.frag");
+	shader_texture_phong.use();
+	shader_texture_phong.setInt("texture0", 0);
+	shader_texture_phong.setInt("texture1", 1);
+
+	shaders.insert(std::make_pair("shader_color_uniform", shader_color_uniform));
 	shaders.insert(std::make_pair("shader_color_attribute", shader_color_attribute));
-	shaders.insert(std::make_pair("shader_texture", shader_texture));
-	shaders.insert(std::make_pair("shader_simple_texture", shader_simple_texture));
+	shaders.insert(std::make_pair("shader_texture_phong", shader_texture_phong));
+	shaders.insert(std::make_pair("shader_texture_simple", shader_texture_simple));
 }
 
 
@@ -335,11 +335,19 @@ void render(double deltaTime) {
 	glm::mat4 view = camera.getViewMatrix();
 	glm::mat4 projection = glm::perspective(glm::radians(camera.FOV), aspectRatio, 0.1f, 100.0f);
 
+	//https://gamedev.stackexchange.com/questions/43691/how-can-i-move-an-object-in-an-infinity-or-figure-8-trajectory
+	float t = glfwGetTime();
+	float scale = 2 / (3 - cos(2 * t));
+	float lightPositionOffsetX = 3 * scale * cos(t);
+	float lightPositionOffsetY = 3 * sin(t);
+	float lightPositionOffsetZ = 6 * scale * sin(t * 2) / 2;
+	glm::vec3 lightPositionOffset(lightPositionOffsetX, lightPositionOffsetY, lightPositionOffsetZ);
+
 	// Render OpenGL
 	if (drawPlane) {
-		Shader& shader_texture = shaders.find("shader_texture")->second;
-		shader_texture.use();
-		shader_texture.setFloat("mixValue", mixValue);
+		Shader& shader_texture_phong = shaders.find("shader_texture_phong")->second;
+		shader_texture_phong.use();
+		shader_texture_phong.setFloat("mixValue", mixValue);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures[0]);
@@ -352,17 +360,17 @@ void render(double deltaTime) {
 		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(5.0f, 5.0f, 1.0f));
 
-		shader_texture.setMatrixFloat4v("model", 1, model);
-		shader_texture.setMatrixFloat4v("view", 1, view);
-		shader_texture.setMatrixFloat4v("projection", 1, projection);
+		shader_texture_phong.setMatrixFloat4v("model", 1, model);
+		shader_texture_phong.setMatrixFloat4v("view", 1, view);
+		shader_texture_phong.setMatrixFloat4v("projection", 1, projection);
 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glUseProgram(0);
 	}
 	if (drawCubes) {
-		Shader& shader_texture = shaders.find("shader_texture")->second;
-		shader_texture.use();
-		shader_texture.setFloat("mixValue", mixValue);
+		Shader& shader_texture_phong = shaders.find("shader_texture_phong")->second;
+		shader_texture_phong.use();
+		shader_texture_phong.setFloat("mixValue", mixValue);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures[0]);
@@ -370,24 +378,17 @@ void render(double deltaTime) {
 		glBindTexture(GL_TEXTURE_2D, textures[1]);
 		glBindVertexArray(VAO[1]);
 
-		shader_texture.setMatrixFloat4v("view", 1, view);
-		shader_texture.setMatrixFloat4v("projection", 1, projection);
+		shader_texture_phong.setMatrixFloat4v("view", 1, view);
+		shader_texture_phong.setMatrixFloat4v("projection", 1, projection);
 
-		float t = glfwGetTime();
-		float scale = 2 / (3 - cos(2 * t));
-		float lightPositionOffsetX = 3 * scale * cos(t);
-		float lightPositionOffsetY = 3 * sin(t);
-		float lightPositionOffsetZ = 6 * scale * sin(t * 2) / 2;
-		glm::vec3 lightPositionOffset(lightPositionOffsetX, lightPositionOffsetY, lightPositionOffsetZ);
+		shader_texture_phong.setVec3("lightColor", lightColor);
+		shader_texture_phong.setVec3("lightPosition", lightPosition + lightPositionOffset);
+		shader_texture_phong.setVec3("viewPosition", camera.Position);
 
-		shader_texture.setVec3("lightColor", lightColor);
-		shader_texture.setVec3("lightPosition", lightPosition + lightPositionOffset);
-		shader_texture.setVec3("viewPosition", camera.Position);
-
-		shader_texture.setFloat("ambientStrength", ambientStrength);
-		shader_texture.setFloat("specularStrength", specularStrength);
-		shader_texture.setFloat("diffuseStrength", diffuseStrength);
-		shader_texture.setInt("shininess", shininess);
+		shader_texture_phong.setFloat("ambientStrength", ambientStrength);
+		shader_texture_phong.setFloat("specularStrength", specularStrength);
+		shader_texture_phong.setFloat("diffuseStrength", diffuseStrength);
+		shader_texture_phong.setInt("shininess", shininess);
 
 		glm::vec3 cubePositions[] = {
 			glm::vec3(0.0f,  5.0f,  0.0f),
@@ -408,26 +409,27 @@ void render(double deltaTime) {
 			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(30.0f) + 30 * i, glm::vec3(1.0f, 0.0f, 0.0f));
 			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f) + 20 * i, glm::vec3(0.0f, 1.0f, 0.0f));
 			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(10.0f) + 10 * i, glm::vec3(0.0f, 0.0f, 1.0f));
-			shader_texture.setMatrixFloat4v("model", 1, model);
+			shader_texture_phong.setMatrixFloat4v("model", 1, model);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-
+	}
+	if (drawLight) {
 		glUseProgram(0);
 
-		Shader& shader_simple_texture = shaders.find("shader_simple_texture")->second;
-		shader_simple_texture.use();
+		Shader& shader_texture_simple = shaders.find("shader_texture_simple")->second;
+		shader_texture_simple.use();
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures[2]);
 
-		shader_simple_texture.setMatrixFloat4v("view", 1, view);
-		shader_simple_texture.setMatrixFloat4v("projection", 1, projection);
+		shader_texture_simple.setMatrixFloat4v("view", 1, view);
+		shader_texture_simple.setMatrixFloat4v("projection", 1, projection);
 
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, lightPosition + lightPositionOffset);
 		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-		shader_simple_texture.setMatrixFloat4v("model", 1, model);
+		shader_texture_simple.setMatrixFloat4v("model", 1, model);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -457,6 +459,7 @@ void render(double deltaTime) {
 	if (ImGui::CollapsingHeader("Draws", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::Checkbox("Draw Textured Rectangle?", &drawPlane);
 		ImGui::Checkbox("Draw Textured Cube?", &drawCubes);
+		ImGui::Checkbox("Draw Light Cube?", &drawLight);
 
 		ImGui::SliderFloat("Mix Value", &mixValue, 0.0f, 1.0f);
 
