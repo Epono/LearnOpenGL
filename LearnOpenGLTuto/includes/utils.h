@@ -44,6 +44,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void createOpenGLObjects();
 void cleanUp();
+void createTextures();
 void createShaders();
 void render(double deltaTime);
 void createTexture(GLenum activeTexture, GLuint textureID, const std::string& texturePath, GLint internalFormat, GLenum format);

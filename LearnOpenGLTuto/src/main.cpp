@@ -55,6 +55,7 @@ bool keys[350] = { false };
 
 // OpenGL
 unsigned int VAO[2], VBO[2], EBO[1];
+unsigned int VAOGizmo[2], VBOGizmo[1];
 unsigned int textures[3];
 std::map<std::string, Shader> shaders;
 
@@ -106,8 +107,8 @@ int main() {
 
 	// Viewport inside the window, can spill out ouf window, if smaller than window, takes only a fraction of the window
 	glViewport(0, 0, width, height);
-
 	glEnable(GL_DEPTH_TEST);
+	glLineWidth(2.0f);
 
 	// Callbacks
 	glfwSetFramebufferSizeCallback(window.get(), framebuffer_size_callback);
@@ -120,6 +121,8 @@ int main() {
 	stbi_set_flip_vertically_on_load(true);
 
 	createOpenGLObjects();
+
+	createTextures();
 
 	createShaders();
 
@@ -169,7 +172,9 @@ int main() {
 
 void createOpenGLObjects() {
 	glGenVertexArrays(2, VAO);
+	glGenVertexArrays(2, VAOGizmo);
 	glGenBuffers(2, VBO);
+	glGenBuffers(1, VBOGizmo);
 	glGenBuffers(1, EBO);
 	glGenTextures(2, textures);
 
@@ -208,48 +213,53 @@ void createOpenGLObjects() {
 	glEnableVertexAttribArray(3);
 
 
+	// https://stackoverflow.com/questions/25349620/use-one-gl-element-array-buffer-to-reference-each-attribute-from-0
+	// "When using buffers for your vertex attributes, you need to create a vertex for each unique combination of vertex attributes."
+	// https://stackoverflow.com/questions/11148567/rendering-meshes-with-multiple-indices
+	// "Therefore, every unique combination of components must have its own separate index."
 	float verticesCube[] = {
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  0.0f,  0.0f, -1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  0.0f, -1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f,
+		// position				// tex coords			// normal
+		-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f,  0.0f,  	0.0f, -1.0f,
+		 0.5f, -0.5f, -0.5f,  	1.0f, 0.0f,  0.0f,  	0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  	1.0f, 1.0f,  0.0f,  	0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  	1.0f, 1.0f,  0.0f,  	0.0f, -1.0f,
+		-0.5f,  0.5f, -0.5f,  	0.0f, 1.0f,  0.0f,  	0.0f, -1.0f,
+		-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f,  0.0f,  	0.0f, -1.0f,
 
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  0.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  0.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  0.0f,  0.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  0.0f,  0.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,  0.0f,  0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f,  0.0f,  	0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  	1.0f, 0.0f,  0.0f,  	0.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  	1.0f, 1.0f,  0.0f,  	0.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  	1.0f, 1.0f,  0.0f,  	0.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  	0.0f, 1.0f,  0.0f,  	0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f,  0.0f,  	0.0f, 1.0f,
 
-	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  -1.0f,  0.0f,  0.0f,
-	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  -1.0f,  0.0f,  0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  -1.0f,  0.0f,  0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  -1.0f,  0.0f,  0.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  -1.0f,  0.0f,  0.0f,
-	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  	1.0f, 0.0f, -1.0f,  	0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  	1.0f, 1.0f, -1.0f,  	0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  	0.0f, 1.0f, -1.0f,  	0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  	0.0f, 1.0f, -1.0f,  	0.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f, -1.0f,  	0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  	1.0f, 0.0f, -1.0f,  	0.0f,  0.0f,
 
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  1.0f,  0.0f,  0.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
-	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  1.0f,  0.0f,  0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  	1.0f, 0.0f,  1.0f,  	0.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  	1.0f, 1.0f,  1.0f,  	0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  	0.0f, 1.0f,  1.0f,  	0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  	0.0f, 1.0f,  1.0f,  	0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  	0.0f, 0.0f,  1.0f,  	0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  	1.0f, 0.0f,  1.0f,  	0.0f,  0.0f,
 
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  0.0f, -1.0f,  0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f, -1.0f,  0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  	0.0f, 1.0f,  0.0f, 		1.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  	1.0f, 1.0f,  0.0f, 		1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  	1.0f, 0.0f,  0.0f, 		1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  	1.0f, 0.0f,  0.0f, 		1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f,  0.0f, 		1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  	0.0f, 1.0f,  0.0f, 		1.0f,  0.0f,
 
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  1.0f,  0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  1.0f,  0.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f
+		-0.5f,  0.5f, -0.5f,  	0.0f, 1.0f,  0.0f,  	1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  	1.0f, 1.0f,  0.0f,  	1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  	1.0f, 0.0f,  0.0f,  	1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  	1.0f, 0.0f,  0.0f,  	1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f,  0.0f,  	1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  	0.0f, 1.0f,  0.0f,  	1.0f,  0.0f
 	};
 
 	glBindVertexArray(VAO[1]);
@@ -266,12 +276,36 @@ void createOpenGLObjects() {
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(3);
 
+	// Gizmo
+	glBindVertexArray(VAOGizmo[0]);
 
-	// Move to createShaders ?
-	createTexture(GL_TEXTURE0, textures[0], "assets/container.jpg", GL_RGB, GL_RGB);
-	createTexture(GL_TEXTURE1, textures[1], "assets/awesomeface.png", GL_RGBA, GL_RGBA);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCube), verticesCube, GL_STATIC_DRAW);
 
-	createTexture(GL_TEXTURE0, textures[2], "assets/redstone_lamp.png", GL_RGBA, GL_RGBA);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+	glEnableVertexAttribArray(3);
+
+
+	float verticesLine[] = {
+		// position
+		 0.0f, 0.0f, 0.0f,
+		 0.9f, 0.0f, 0.0f
+	};
+	glBindVertexArray(VAOGizmo[1]);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBOGizmo[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesLine), verticesLine, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+
 
 	// Unbind
 	glBindVertexArray(0);
@@ -303,6 +337,13 @@ void createTexture(GLenum activeTexture, GLuint textureID, const std::string& te
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glActiveTexture(0);
+}
+
+void createTextures() {
+	createTexture(GL_TEXTURE0, textures[0], "assets/container.jpg", GL_RGB, GL_RGB);
+	createTexture(GL_TEXTURE1, textures[1], "assets/awesomeface.png", GL_RGBA, GL_RGBA);
+
+	createTexture(GL_TEXTURE0, textures[2], "assets/redstone_lamp.png", GL_RGBA, GL_RGBA);
 }
 
 void createShaders() {
@@ -345,15 +386,16 @@ void render(double deltaTime) {
 
 	// Render OpenGL
 	if (drawPlane) {
-		Shader& shader_texture_phong = shaders.find("shader_texture_phong")->second;
-		shader_texture_phong.use();
-		shader_texture_phong.setFloat("mixValue", mixValue);
+		glBindVertexArray(VAO[0]);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures[0]);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, textures[1]);
-		glBindVertexArray(VAO[0]);
+
+		Shader& shader_texture_phong = shaders.find("shader_texture_phong")->second;
+		shader_texture_phong.use();
+		shader_texture_phong.setFloat("mixValue", mixValue);
 
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(planePosition[0], planePosition[1], planePosition[2]));
@@ -365,18 +407,19 @@ void render(double deltaTime) {
 		shader_texture_phong.setMatrixFloat4v("projection", 1, projection);
 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		glUseProgram(0);
+		Shader::release();
 	}
 	if (drawCubes) {
-		Shader& shader_texture_phong = shaders.find("shader_texture_phong")->second;
-		shader_texture_phong.use();
-		shader_texture_phong.setFloat("mixValue", mixValue);
+		glBindVertexArray(VAO[1]);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures[0]);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, textures[1]);
-		glBindVertexArray(VAO[1]);
+
+		Shader& shader_texture_phong = shaders.find("shader_texture_phong")->second;
+		shader_texture_phong.use();
+		shader_texture_phong.setFloat("mixValue", mixValue);
 
 		shader_texture_phong.setMatrixFloat4v("view", 1, view);
 		shader_texture_phong.setMatrixFloat4v("projection", 1, projection);
@@ -413,29 +456,123 @@ void render(double deltaTime) {
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+		Shader::release();
 	}
 	if (drawLight) {
-		glUseProgram(0);
-
-		Shader& shader_texture_simple = shaders.find("shader_texture_simple")->second;
-		shader_texture_simple.use();
+		glBindVertexArray(VAO[1]);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures[2]);
+
+		Shader& shader_texture_simple = shaders.find("shader_texture_simple")->second;
+		shader_texture_simple.use();
 
 		shader_texture_simple.setMatrixFloat4v("view", 1, view);
 		shader_texture_simple.setMatrixFloat4v("projection", 1, projection);
 
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, lightPosition + lightPositionOffset);
+		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
 		shader_texture_simple.setMatrixFloat4v("model", 1, model);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		glUseProgram(0);
+		Shader::release();
 	}
 	glBindVertexArray(0);
+
+	// gizmo
+	{
+		glViewport(0, 0, 100, 100);
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		glBindVertexArray(VAOGizmo[0]);
+
+		Shader& shader_color_uniform = shaders.find("shader_color_uniform")->second;
+		shader_color_uniform.use();
+
+		// Fixed postition so that camera position doesn't change render 
+		glm::mat4 viewGizmo = glm::mat4(view);
+		viewGizmo[3][0] = 0.0f;
+		viewGizmo[3][1] = 0.0f;
+		viewGizmo[3][2] = -3.0f;
+		shader_color_uniform.setMatrixFloat4v("view", 1, viewGizmo);
+		glm::mat4 projectionGizmo = glm::perspective(glm::radians(camera.FOV), 1.0f, 0.1f, 100.0f);
+		shader_color_uniform.setMatrixFloat4v("projection", 1, projectionGizmo);
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+		shader_color_uniform.setMatrixFloat4v("model", 1, model);
+
+		shader_color_uniform.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+		shader_color_uniform.setVec3("lightPosition", glm::vec3(3.0f, 2.0, 5.0f));
+		shader_color_uniform.setVec3("viewPosition", glm::vec3(0.0f, 0.0f, -3.0f));
+
+		shader_color_uniform.setFloat("ambientStrength", ambientStrength);
+		shader_color_uniform.setFloat("specularStrength", specularStrength);
+		shader_color_uniform.setFloat("diffuseStrength", diffuseStrength);
+		shader_color_uniform.setInt("shininess", shininess);
+
+		shader_color_uniform.setFloat4("ourColor", 0.7f, 0.7f, 0.7f, 1.0f);
+
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// We want Shadow only for the main cube
+		shader_color_uniform.setFloat("ambientStrength", 1.0f);
+
+		// X Cube
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.9f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+		shader_color_uniform.setMatrixFloat4v("model", 1, model);
+		shader_color_uniform.setFloat4("ourColor", 1.0f, 0.0f, 0.0f, 1.0f);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// Y Cube
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 0.9f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+		shader_color_uniform.setMatrixFloat4v("model", 1, model);
+		shader_color_uniform.setFloat4("ourColor", 0.0f, 1.0f, 0.0f, 1.0f);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// Z Cube
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.9f));
+		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+		shader_color_uniform.setMatrixFloat4v("model", 1, model);
+		shader_color_uniform.setFloat4("ourColor", 0.0f, 0.0f, 1.0f, 1.0f);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		glBindVertexArray(VAOGizmo[1]);
+
+		// x
+		model = glm::mat4(1.0f);
+		shader_color_uniform.setMatrixFloat4v("model", 1, model);
+		shader_color_uniform.setFloat4("ourColor", 1.0f, 0.0f, 0.0f, 1.0f);
+		glDrawArrays(GL_LINES, 0, 6);
+
+		// y
+		model = glm::mat4(1.0f);
+		model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		shader_color_uniform.setMatrixFloat4v("model", 1, model);
+		shader_color_uniform.setFloat4("ourColor", 0.0f, 1.0f, 0.0f, 1.0f);
+		glDrawArrays(GL_LINES, 0, 6);
+
+		// z
+		model = glm::mat4(1.0f);
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		shader_color_uniform.setMatrixFloat4v("model", 1, model);
+		shader_color_uniform.setFloat4("ourColor", 0.0f, 0.0f, 1.0f, 1.0f);
+		glDrawArrays(GL_LINES, 0, 6);
+
+		Shader::release();
+		glViewport(0, 0, width, height);
+		glDepthFunc(GL_LESS);
+	}
 
 
 	// Render Dear Imgui
@@ -492,6 +629,7 @@ void render(double deltaTime) {
 
 void cleanUp() {
 	glDeleteVertexArrays(2, VAO);
+	glDeleteVertexArrays(2, VAOGizmo);
 	glDeleteBuffers(2, VBO);
 	glDeleteBuffers(1, EBO);
 	glDeleteTextures(2, textures);
