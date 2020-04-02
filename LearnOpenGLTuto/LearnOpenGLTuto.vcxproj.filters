@@ -57,7 +57,7 @@
     <ClCompile Include="..\Include\glad\glad.c">
       <Filter>Source Files\Dependencies</Filter>
     </ClCompile>
-    <ClCompile Include="src\Camera.cpp">
+    <ClCompile Include="src\camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -110,7 +110,7 @@
     <ClInclude Include="includes\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="includes\Camera.h">
+    <ClInclude Include="includes\camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

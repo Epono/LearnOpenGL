@@ -47,6 +47,7 @@ double lastMousePosY = height / 2;
 
 bool lastLeftClick = false;
 bool lastRightClick = false;
+bool lastMiddleClick = false;
 float scrollSpeed = 2.0f;
 
 float keyRepeatDelay = 0.5f;
@@ -109,6 +110,8 @@ int main() {
 	glViewport(0, 0, width, height);
 	glEnable(GL_DEPTH_TEST);
 	glLineWidth(2.0f);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
 
 	// Callbacks
 	glfwSetFramebufferSizeCallback(window.get(), framebuffer_size_callback);
@@ -299,7 +302,7 @@ void createOpenGLObjects() {
 	};
 	glBindVertexArray(VAOGizmo[1]);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBOGizmo[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOGizmo[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesLine), verticesLine, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -374,7 +377,12 @@ void render(double deltaTime) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glm::mat4 view = camera.getViewMatrix();
-	glm::mat4 projection = glm::perspective(glm::radians(camera.FOV), aspectRatio, 0.1f, 100.0f);
+	glm::mat4 projectionPerspective = glm::perspective(glm::radians(camera.FOV), aspectRatio, 0.1f, 100.0f);
+	glm::mat4 projectionOrtho = glm::ortho(
+		-aspectRatio * camera.OrthographicFactor, aspectRatio * camera.OrthographicFactor,
+		-camera.OrthographicFactor, camera.OrthographicFactor,
+		0.1f, 100.0f);
+	glm::mat4& projection = (camera.IsPerspective ? projectionPerspective : projectionOrtho);
 
 	//https://gamedev.stackexchange.com/questions/43691/how-can-i-move-an-object-in-an-infinity-or-figure-8-trajectory
 	float t = glfwGetTime();
@@ -407,7 +415,9 @@ void render(double deltaTime) {
 		shader_texture_phong.setMatrixFloat4v("projection", 1, projection);
 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 		Shader::release();
+		glBindVertexArray(0);
 	}
 	if (drawCubes) {
 		glBindVertexArray(VAO[1]);
@@ -456,7 +466,9 @@ void render(double deltaTime) {
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+
 		Shader::release();
+		glBindVertexArray(0);
 	}
 	if (drawLight) {
 		glBindVertexArray(VAO[1]);
@@ -481,8 +493,8 @@ void render(double deltaTime) {
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		Shader::release();
+		glBindVertexArray(0);
 	}
-	glBindVertexArray(0);
 
 	// gizmo
 	{
@@ -570,6 +582,8 @@ void render(double deltaTime) {
 		glDrawArrays(GL_LINES, 0, 6);
 
 		Shader::release();
+		glBindVertexArray(0);
+
 		glViewport(0, 0, width, height);
 		glDepthFunc(GL_LESS);
 	}
@@ -604,6 +618,10 @@ void render(double deltaTime) {
 
 		ImGui::Separator();
 		ImGui::SliderFloat("FOV", &camera.FOV, 10.0f, 180.0f);
+		ImGui::Checkbox("Is perspective?", &camera.IsPerspective);
+		//ImGui::DragFloat4("Ortho (L,R,B,T)", &camera.OrthographicFactor[0], 0.1f, -20.0f, 20.0f);
+		ImGui::SliderFloat("Ortho Factor", &camera.OrthographicFactor, 1.0f, 10.0f);
+		ImGui::DragFloat("Ortho Factorr", &camera.OrthographicFactor, 0.1f, 1.0f, 10.0f);
 		ImGui::SliderFloat("Camera Speed", &camera.MovementSpeed, 1.0f, 20.f);
 		ImGui::Text("Camera: (%.2f, %.2f, %.2f)", camera.Position.x, camera.Position.y, camera.Position.z);
 
@@ -653,6 +671,7 @@ void processInput(GLFWwindow* window, double deltaTime) {
 
 	bool isLeftMousePressed = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
 	bool isRightMousePressed = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2);
+	bool isMiddleMousePressed = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_3);
 
 	if (firstMouse) {
 		lastMousePosX = currentMousePosX;
@@ -673,9 +692,24 @@ void processInput(GLFWwindow* window, double deltaTime) {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
+	if (isMiddleMousePressed && !lastMiddleClick) {
+		// Just pressed middle click
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		firstMouse = true;
+	}
+	else if (!isMiddleMousePressed && lastMiddleClick) {
+		// Just released middle click
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+
 	// Additional checks to ignore clicks on ImGui windows
 	if (isRightMousePressed && lastRightClick && !ImGui::IsAnyWindowHovered() && !ImGui::IsAnyItemHovered()) {
 		camera.processMouseMovement(deltaTime, deltaX, deltaY);
+	}
+
+	// Additional checks to ignore clicks on ImGui windows
+	if (isMiddleMousePressed && lastMiddleClick && !ImGui::IsAnyWindowHovered() && !ImGui::IsAnyItemHovered()) {
+		camera.processMouseMovement2(deltaTime, deltaX, deltaY);
 	}
 
 	lastMousePosX = currentMousePosX;
@@ -683,6 +717,7 @@ void processInput(GLFWwindow* window, double deltaTime) {
 
 	lastLeftClick = isLeftMousePressed;
 	lastRightClick = isRightMousePressed;
+	lastMiddleClick = isMiddleMousePressed;
 
 	// KEYBOARD
 	// EXIT

@@ -21,6 +21,7 @@ const float DEFAULT_PITCH = 0.0f;
 const float DEFAULT_SPEED = 5.0f;
 const float DEFAULT_SENSITIVITY = 10.0f;
 const float DEFAULT_FOV = 45.0f;
+const float DEFAULT_ORTHOGRAPHIC_FACTOR = 5.0f;
 
 // 
 const float MIN_FOV = 1.0f;
@@ -31,9 +32,17 @@ class Camera
 public:
 
 	// OPTIONS
-	float FOV = 45.0f;
 	float MouseSensitivity = 10.0f;
+	float MouseSensitivityDrag = 3.0f;
 	float MovementSpeed = 5.0f;
+
+	// Perspective
+	float FOV = 45.0f;
+
+	// Orthographic
+	float OrthographicFactor;
+
+	bool IsPerspective;
 
 	// EULER ANGLES (should not be directly modified)
 	float Pitch = 0.0f;
@@ -46,16 +55,23 @@ public:
 	glm::vec3 Right;
 	glm::vec3 WorldUp;
 
-	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = DEFAULT_YAW, float pitch = DEFAULT_PITCH) : MovementSpeed(DEFAULT_SPEED), MouseSensitivity(DEFAULT_SENSITIVITY), FOV(DEFAULT_FOV) {
+	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = DEFAULT_YAW, float pitch = DEFAULT_PITCH, bool isPerspective = true)
+		: MovementSpeed(DEFAULT_SPEED), MouseSensitivity(DEFAULT_SENSITIVITY), FOV(DEFAULT_FOV), OrthographicFactor(DEFAULT_ORTHOGRAPHIC_FACTOR) {
 		Position = position;
 		WorldUp = worldUp;
 		Yaw = yaw;
 		Pitch = pitch;
+		IsPerspective = isPerspective;
 		updateCameraVectors();
 	}
 
 	glm::mat4 getViewMatrix() {
-		return glm::lookAt(Position, Position + Front, WorldUp);
+		if (IsPerspective) {
+			return glm::lookAt(Position, Position + Front, WorldUp);
+		}
+		else {
+			return glm::lookAt(Position, Position + Front, WorldUp);
+		}
 	}
 
 	void processKeyboard(const CameraMovement movement, const double deltaTime) {
@@ -101,14 +117,25 @@ public:
 		updateCameraVectors();
 	}
 
-	void processMouseScroll(const double yoffset) {
-		if (FOV >= MIN_FOV && FOV <= MAX_FOV)
-			FOV -= yoffset;
+	void processMouseMovement2(const double deltaTime, const float deltaX, const float deltaY) {
+		// Negate because the drag movement is in the opposite direction
+		Position -= Right * (float)(deltaX * MouseSensitivityDrag * deltaTime);
+		Position -= Up * (float)(deltaY * MouseSensitivityDrag * deltaTime);
+	}
 
-		if (FOV < MIN_FOV)
-			FOV = MIN_FOV;
-		else if (FOV > MAX_FOV)
-			FOV = MAX_FOV;
+	void processMouseScroll(const double yoffset) {
+		if (IsPerspective) {
+			if (FOV >= MIN_FOV && FOV <= MAX_FOV)
+				FOV -= yoffset;
+
+			if (FOV < MIN_FOV)
+				FOV = MIN_FOV;
+			else if (FOV > MAX_FOV)
+				FOV = MAX_FOV;
+		}
+		else {
+			OrthographicFactor -= yoffset / 5;
+		}
 	}
 
 private:
