@@ -164,7 +164,7 @@ int main() {
 
 	// https://gafferongames.com/post/fix_your_timestep/
 	int logicStepsPerSecond = 60;
-	double dt = (float) 1 / logicStepsPerSecond;
+	double dt = (float)1 / logicStepsPerSecond;
 	double accumulator = 0.0f;
 
 	double lastFrame = 0.0f;						// current_time
@@ -604,12 +604,36 @@ void render(double deltaTime) {
 		shader_texture_phong_materials.setVec3("viewPosition", camera.Position);
 
 		shader_texture_phong_materials.setFloat("material.shininess", 32.0f);
-		shader_texture_phong_materials.setFloat("time", glfwGetTime());
 
-		shader_texture_phong_materials.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		shader_texture_phong_materials.setVec3("light.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-		shader_texture_phong_materials.setVec3("light.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
-		shader_texture_phong_materials.setVec3("light.position", lightPosition + lightPositionOffset);
+		//
+		//
+		//
+		shader_texture_phong_materials.setVec3("directionalLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+		shader_texture_phong_materials.setVec3("directionalLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		shader_texture_phong_materials.setVec3("directionalLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+		shader_texture_phong_materials.setVec3("directionalLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+
+		shader_texture_phong_materials.setVec3("pointLights[0].position", lightPosition + lightPositionOffset);
+		shader_texture_phong_materials.setFloat("pointLights[0].constant", 1.0f);
+		shader_texture_phong_materials.setFloat("pointLights[0].linear", 0.09f);
+		shader_texture_phong_materials.setFloat("pointLights[0].quadratic", 0.032f);
+		shader_texture_phong_materials.setVec3("pointLights[0].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		shader_texture_phong_materials.setVec3("pointLights[0].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+		shader_texture_phong_materials.setVec3("pointLights[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+		shader_texture_phong_materials.setVec3("spotLights[0].position", camera.Position);
+		shader_texture_phong_materials.setVec3("spotLights[0].direction", camera.Front);
+		shader_texture_phong_materials.setFloat("spotLights[0].innerCutOff", glm::cos(glm::radians(12.5f)));
+		shader_texture_phong_materials.setFloat("spotLights[0].outerCutOff", glm::cos(glm::radians(15.0f)));
+		shader_texture_phong_materials.setFloat("spotLights[0].constant", 1.0f);
+		shader_texture_phong_materials.setFloat("spotLights[0].linear", 0.09f);
+		shader_texture_phong_materials.setFloat("spotLights[0].quadratic", 0.032f);
+		shader_texture_phong_materials.setVec3("spotLights[0].ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+		shader_texture_phong_materials.setVec3("spotLights[0].diffuse", glm::vec3(1.0f, 1.0f, 0.0f));
+		shader_texture_phong_materials.setVec3("spotLights[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		//
+		//
+		//
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -923,7 +947,7 @@ void processInput(GLFWwindow* window, double deltaTime) {
 	// https://www.glfw.org/docs/latest/window.html#window_windowed_full_screen
 	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && keys[GLFW_KEY_F] == GLFW_RELEASE) {
 		fullscreen = !fullscreen;
-		
+
 		const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 		if (fullscreen) {
 			glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), NULL, NULL, mode->width, mode->height, mode->refreshRate);
