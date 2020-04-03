@@ -116,6 +116,10 @@ vec3 computeSpotLight(SpotLight light, vec3 fragNormal, vec3 fragPosition, vec3 
 	float theta = dot(lightDirection, normalize(-light.direction));
 	float epsilon = light.innerCutOff - light.outerCutOff;
 	float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0); // TODO: change ease function with bezier ?
+	// float intensity = smoothstep(0.0, 1.0, (theta - light.outerCutOff) / epsilon); // TODO: check
+	// TODO: "You can also use a "cookie" texture to simulate a real flashlight by multiplying it with the fragment color and the light attenuation. Google "flashlight texture"."
+	// https://uploads.disquscdn.com/images/7e0feb070eb4b76a32179e2fa4ef26e40a340d9bb9c76d2449a8685d30fd7919.jpg
+	// https://uploads.disquscdn.com/images/c917ceac2c0ab5583a33b6767d4e7c859268214b689bacf5ce6e960e4c54dca4.jpg
 
 	// Ambient
 	vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoord));
