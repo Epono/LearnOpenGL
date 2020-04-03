@@ -9,10 +9,11 @@ uniform vec4 ourColor;
 uniform vec3 lightPosition;
 uniform vec3 lightColor;
 uniform vec3 viewPosition;
+
 uniform float ambientStrength;
 uniform float diffuseStrength;
 uniform float specularStrength;
-uniform int shininess;
+uniform float shininess;
 
 void main()
 {

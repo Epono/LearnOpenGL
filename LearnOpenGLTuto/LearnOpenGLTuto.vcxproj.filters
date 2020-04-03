@@ -139,5 +139,17 @@
     <None Include="shaders\shader_texture_phong.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\shader_color_material.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader_color_material.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader_texture_phong_materials.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader_texture_phong_materials.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

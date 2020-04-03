@@ -192,6 +192,10 @@
   <ItemGroup>
     <None Include="shaders\shader_color_attribute.frag" />
     <None Include="shaders\shader_color_attribute.vert" />
+    <None Include="shaders\shader_color_material.frag" />
+    <None Include="shaders\shader_color_material.vert" />
+    <None Include="shaders\shader_texture_phong_materials.frag" />
+    <None Include="shaders\shader_texture_phong_materials.vert" />
     <None Include="shaders\shader_texture_simple.frag" />
     <None Include="shaders\shader_texture_simple.vert" />
     <None Include="shaders\shader_texture_phong.frag" />

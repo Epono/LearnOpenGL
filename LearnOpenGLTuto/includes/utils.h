@@ -47,7 +47,7 @@ void cleanUp();
 void createTextures();
 void createShaders();
 void render(double deltaTime);
-void createTexture(GLenum activeTexture, GLuint textureID, const std::string& texturePath, GLint internalFormat, GLenum format);
+unsigned int createTexture(const std::string& texturePath);
 
 inline float B0(float t) { return t * t * t; }
 inline float B1(float t) { return 3 * t * t * (1 - t); }
