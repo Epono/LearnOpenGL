@@ -103,6 +103,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -116,6 +117,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -131,6 +133,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,6 +151,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -167,8 +171,11 @@
     <ClCompile Include="..\Include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\Include\stb_image\stb_image.cpp" />
     <ClCompile Include="src\camera.cpp" />
+    <ClCompile Include="src\directional_light.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\point_light.cpp" />
     <ClCompile Include="src\shader.cpp" />
+    <ClCompile Include="src\spot_light.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Include\glad\glad.h" />
@@ -186,7 +193,10 @@
     <ClInclude Include="..\Include\KHR\khrplatform.h" />
     <ClInclude Include="..\Include\stb_image\stb_image.h" />
     <ClInclude Include="includes\camera.h" />
+    <ClInclude Include="includes\directional_light.h" />
+    <ClInclude Include="includes\point_light.h" />
     <ClInclude Include="includes\shader.h" />
+    <ClInclude Include="includes\spot_light.h" />
     <ClInclude Include="includes\utils.h" />
   </ItemGroup>
   <ItemGroup>
@@ -194,6 +204,8 @@
     <None Include="shaders\shader_color_attribute.vert" />
     <None Include="shaders\shader_color_material.frag" />
     <None Include="shaders\shader_color_material.vert" />
+    <None Include="shaders\shader_color_phong_materials.frag" />
+    <None Include="shaders\shader_color_phong_materials.vert" />
     <None Include="shaders\shader_texture_phong_materials.frag" />
     <None Include="shaders\shader_texture_phong_materials.vert" />
     <None Include="shaders\shader_texture_simple.frag" />

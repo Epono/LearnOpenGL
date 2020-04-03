@@ -60,6 +60,15 @@
     <ClCompile Include="src\camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\directional_light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\point_light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\spot_light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Include\glad\glad.h">
@@ -113,6 +122,15 @@
     <ClInclude Include="includes\camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="includes\directional_light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\point_light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\spot_light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\shader_texture_simple.frag">
@@ -149,6 +167,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\shader_texture_phong_materials.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader_color_phong_materials.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader_color_phong_materials.vert">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

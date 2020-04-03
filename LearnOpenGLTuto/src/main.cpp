@@ -27,6 +27,9 @@
 #include <utils.h>
 #include <shader.h>
 #include <camera.h>
+#include <directional_light.h>
+#include <point_light.h>
+#include <spot_light.h>
 
 // LOGIC
 float numberOfUpdatesPerSecond = 60;
@@ -84,10 +87,15 @@ int shininess = 32;
 
 bool	drawPlane = true;
 bool	drawCubes = true;
-bool	drawLight = true;
+bool	drawLights = true;
+bool	drawGizmo = true;
 float	mixValue = 0.0f;
 
 Camera camera(glm::vec3(0.0f, 2.5f, 10.0f));
+
+DirectionalLight directionalLight;
+std::vector<PointLight> pointLights{ PointLight(glm::vec3(-2.5f, 5.0f, -5.0f)), PointLight(glm::vec3(2.5f, 5.0f, -5.0f)) };
+std::vector<SpotLight> spotLights{ SpotLight(glm::vec3(0.0f, 2.0f, -5.0f), glm::vec3(0.0f, -1.0f, 0.0f)) };
 
 int main() {
 	glfwInit();
@@ -146,6 +154,8 @@ int main() {
 
 	createShaders();
 
+
+
 	// setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -182,12 +192,13 @@ int main() {
 			// input
 			// & update ideally
 			processInput(window.get(), dt);
+			update(dt);
 			accumulator -= dt;
 		}
 
 
 		// render
-		render(deltaTime);
+		render(dt);
 
 		// check and call events and swap the buffers
 		// https://discourse.glfw.org/t/correct-order-for-making-fullscreen-with-poll-events-and-window-refresh-etc/1069
@@ -207,19 +218,6 @@ void createOpenGLObjects() {
 	glGenBuffers(1, VBOGizmo);
 	glGenBuffers(1, EBO);
 
-	// Textured rectange
-	float verticesTexturedRectangle[] = {
-		// positions          // colors           // texture coords		// normals
-		 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,			0.0f, 0.0f, 1.0f,	// top right
-		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,  			0.0f, 0.0f, 1.0f,	// bottom right
-		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,  			0.0f, 0.0f, 1.0f,	// bottom left
-		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f,  			0.0f, 0.0f, 1.0f	// top left
-	};
-
-	unsigned int indicesTexturedRectangle[] = {
-		0, 1, 3,   // first triangle
-		1, 2, 3    // second triangle
-	};
 
 	glBindVertexArray(VAO[0]);
 
@@ -240,56 +238,6 @@ void createOpenGLObjects() {
 
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(8 * sizeof(float)));
 	glEnableVertexAttribArray(3);
-
-
-	// https://stackoverflow.com/questions/25349620/use-one-gl-element-array-buffer-to-reference-each-attribute-from-0
-	// "When using buffers for your vertex attributes, you need to create a vertex for each unique combination of vertex attributes."
-	// https://stackoverflow.com/questions/11148567/rendering-meshes-with-multiple-indices
-	// "Therefore, every unique combination of components must have its own separate index."
-	float verticesCube[] = {
-		// position				// tex coords			// normal
-		-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f,  0.0f,  	0.0f, -1.0f,
-		 0.5f, -0.5f, -0.5f,  	1.0f, 0.0f,  0.0f,  	0.0f, -1.0f,
-		 0.5f,  0.5f, -0.5f,  	1.0f, 1.0f,  0.0f,  	0.0f, -1.0f,
-		 0.5f,  0.5f, -0.5f,  	1.0f, 1.0f,  0.0f,  	0.0f, -1.0f,
-		-0.5f,  0.5f, -0.5f,  	0.0f, 1.0f,  0.0f,  	0.0f, -1.0f,
-		-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f,  0.0f,  	0.0f, -1.0f,
-
-		-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f,  0.0f,  	0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  	1.0f, 0.0f,  0.0f,  	0.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  	1.0f, 1.0f,  0.0f,  	0.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  	1.0f, 1.0f,  0.0f,  	0.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  	0.0f, 1.0f,  0.0f,  	0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f,  0.0f,  	0.0f, 1.0f,
-
-		-0.5f,  0.5f,  0.5f,  	1.0f, 0.0f, -1.0f,  	0.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,  	1.0f, 1.0f, -1.0f,  	0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,  	0.0f, 1.0f, -1.0f,  	0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,  	0.0f, 1.0f, -1.0f,  	0.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f, -1.0f,  	0.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,  	1.0f, 0.0f, -1.0f,  	0.0f,  0.0f,
-
-		 0.5f,  0.5f,  0.5f,  	1.0f, 0.0f,  1.0f,  	0.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,  	1.0f, 1.0f,  1.0f,  	0.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,  	0.0f, 1.0f,  1.0f,  	0.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,  	0.0f, 1.0f,  1.0f,  	0.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  	0.0f, 0.0f,  1.0f,  	0.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,  	1.0f, 0.0f,  1.0f,  	0.0f,  0.0f,
-
-		-0.5f, -0.5f, -0.5f,  	0.0f, 1.0f,  0.0f, 		1.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,  	1.0f, 1.0f,  0.0f, 		1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  	1.0f, 0.0f,  0.0f, 		1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  	1.0f, 0.0f,  0.0f, 		1.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f,  0.0f, 		1.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,  	0.0f, 1.0f,  0.0f, 		1.0f,  0.0f,
-
-		-0.5f,  0.5f, -0.5f,  	0.0f, 1.0f,  0.0f,  	1.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,  	1.0f, 1.0f,  0.0f,  	1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,  	1.0f, 0.0f,  0.0f,  	1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,  	1.0f, 0.0f,  0.0f,  	1.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f,  0.0f,  	1.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,  	0.0f, 1.0f,  0.0f,  	1.0f,  0.0f
-	};
 
 	glBindVertexArray(VAO[1]);
 
@@ -320,12 +268,6 @@ void createOpenGLObjects() {
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(3);
 
-
-	float verticesLine[] = {
-		// position
-		 0.0f, 0.0f, 0.0f,
-		 0.9f, 0.0f, 0.0f
-	};
 	glBindVertexArray(VAOGizmo[1]);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBOGizmo[0]);
@@ -345,6 +287,7 @@ void createOpenGLObjects() {
 void createTextures() {
 	texture_container = createTexture("assets/container.jpg");
 	textures.push_back(texture_container);
+
 	texture_awesomeface = createTexture("assets/awesomeface.png");
 	textures.push_back(texture_awesomeface);
 
@@ -353,65 +296,28 @@ void createTextures() {
 
 	texture_container2 = createTexture("assets/container2.png");
 	textures.push_back(texture_container2);
+
 	texture_container2Specular = createTexture("assets/container2_specular.png");
 	textures.push_back(texture_container2Specular);
+
 	texture_matrix = createTexture("assets/matrix.jpg");
 	textures.push_back(texture_matrix);
 }
 
-unsigned int createTexture(const std::string& texturePath) {
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-
-	// load and generate texture
-	int width, height, nrChannels;
-	unsigned char* data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
-	if (data) {
-		GLenum format;
-		if (nrChannels == 1) {
-			format = GL_RED;
-		}
-		else if (nrChannels == 3) {
-			format = GL_RGB;
-		}
-		else if (nrChannels == 4) {
-			format = GL_RGBA;
-		}
-		else {
-			std::cout << "Weird number of channels for texture [" << texturePath << "]: " << nrChannels << std::endl;
-			// TODO:
-		}
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		// set texture wrapping/filtering options on currently bound texture
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	}
-	else {
-		std::cout << "Failed to load texture" << std::endl;
-	}
-	stbi_image_free(data);
-
-	return textureID;
-}
 
 void createShaders() {
 	Shader shader_color_uniform("shaders/shader_color_uniform.vert", "shaders/shader_color_uniform.frag");
 	Shader shader_color_attribute("shaders/shader_color_attribute.vert", "shaders/shader_color_attribute.frag");
-	Shader shader_color_material("shaders/shader_color_material.vert", "shaders/shader_color_material.frag");
+	//Shader shader_color_material("shaders/shader_color_material.vert", "shaders/shader_color_material.frag");
 
 	Shader shader_texture_simple("shaders/shader_texture_simple.vert", "shaders/shader_texture_simple.frag");
 	shader_texture_simple.use();
 	shader_texture_simple.setInt("texture0", 0);
 
-	Shader shader_texture_phong("shaders/shader_texture_phong.vert", "shaders/shader_texture_phong.frag");
-	shader_texture_phong.use();
-	shader_texture_phong.setInt("texture0", 0);
-	shader_texture_phong.setInt("texture1", 1);
+	//Shader shader_texture_phong("shaders/shader_texture_phong.vert", "shaders/shader_texture_phong.frag");
+	//shader_texture_phong.use();
+	//shader_texture_phong.setInt("texture0", 0);
+	//shader_texture_phong.setInt("texture1", 1);
 
 	Shader shader_texture_phong_materials("shaders/shader_texture_phong_materials.vert", "shaders/shader_texture_phong_materials.frag");
 	shader_texture_phong_materials.use();
@@ -419,13 +325,25 @@ void createShaders() {
 	shader_texture_phong_materials.setInt("material.specular", 1);
 	shader_texture_phong_materials.setInt("material.emission", 2);
 
+	Shader shader_color_phong_materials("shaders/shader_color_phong_materials.vert", "shaders/shader_color_phong_materials.frag");
+	shader_color_phong_materials.use();
+	shader_color_phong_materials.setInt("material.emission", 2);
+
 
 	shaders.insert(std::make_pair("shader_color_uniform", shader_color_uniform));
 	shaders.insert(std::make_pair("shader_color_attribute", shader_color_attribute));
-	shaders.insert(std::make_pair("shader_color_material", shader_color_material));
-	shaders.insert(std::make_pair("shader_texture_phong", shader_texture_phong));
+	//shaders.insert(std::make_pair("shader_color_material", shader_color_material));
+	//shaders.insert(std::make_pair("shader_texture_phong", shader_texture_phong));
 	shaders.insert(std::make_pair("shader_texture_simple", shader_texture_simple));
 	shaders.insert(std::make_pair("shader_texture_phong_materials", shader_texture_phong_materials));
+	shaders.insert(std::make_pair("shader_color_phong_materials", shader_color_phong_materials));
+}
+
+void update(double deltaTime) {
+	//spotLights[0]
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, spotLights[0].Position);
+	model = glm::rotate(model, (float)glm::radians(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
 void render(double deltaTime) {
@@ -433,7 +351,6 @@ void render(double deltaTime) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
 	glm::mat4 view = camera.getViewMatrix();
 
 	//////////////////////// 
@@ -445,9 +362,10 @@ void render(double deltaTime) {
 		-camera.OrthographicFactor, camera.OrthographicFactor,
 		0.1f, 100.0f);
 
-	//glm::mat4& projection = (camera.IsPerspective ? projectionPerspective : projectionOrtho);
+	//////////////////////////////////////////////////////////////
 	// mixValue == 1 => full ortho
 	//			== 0 => full perspective
+	// Projection matrix setup
 	float epsilon = 0.01f;
 	if (camera.IsPerspective && mixValue > epsilon) {
 		mixValue -= deltaTime * 5;
@@ -461,74 +379,184 @@ void render(double deltaTime) {
 			mixValue = 1.0f;
 		}
 	}
-	glm::mat4 projection = glm::mat4(1.0f);
-	float mixProjections = getBezierSimplified(mixValue, glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f));
-	// fun when function of time
-	projection[0] = glm::mix(projectionPerspective[0], projectionOrtho[0], mixProjections);
-	projection[1] = glm::mix(projectionPerspective[1], projectionOrtho[1], mixProjections);
-	projection[2] = glm::mix(projectionPerspective[2], projectionOrtho[2], mixProjections);
-	projection[3] = glm::mix(projectionPerspective[3], projectionOrtho[3], mixProjections);
-	//////////////////////// 
+	glm::mat4 projection = lerpProjectionMatrices(projectionPerspective, projectionOrtho, mixValue);
 
-	//https://gamedev.stackexchange.com/questions/43691/how-can-i-move-an-object-in-an-infinity-or-figure-8-trajectory
-	float t = glfwGetTime();
-	float scale = 2 / (3 - cos(2 * t));
-	float lightPositionOffsetX = 3 * scale * cos(t);
-	float lightPositionOffsetY = 3 * sin(t);
-	float lightPositionOffsetZ = 6 * scale * sin(t * 2) / 2;
-	//glm::vec3 lightPositionOffset(lightPositionOffsetX, lightPositionOffsetY, lightPositionOffsetZ);
-	glm::vec3 lightPositionOffset(0.0f, 0.0f, 0.0f);
+	//////////////////////////////////////////////////////////////
+	// Lights setup in shader
+	glm::vec3 emptyVec3(0.0f, 0.0f, 0.0f);
 
+	Shader& shader_texture_phong_materials = shaders.find("shader_texture_phong_materials")->second;
+	shader_texture_phong_materials.use();
+	shader_texture_phong_materials.setMatrixFloat4v("view", 1, view);
+	shader_texture_phong_materials.setMatrixFloat4v("projection", 1, projection);
+	shader_texture_phong_materials.setVec3("viewPosition", camera.Position);
+
+	if (directionalLight.Enabled) {
+		shader_texture_phong_materials.setVec3("directionalLight.direction", directionalLight.Direction);
+		shader_texture_phong_materials.setVec3("directionalLight.ambient", directionalLight.Ambient);
+		shader_texture_phong_materials.setVec3("directionalLight.diffuse", directionalLight.Diffuse);
+		shader_texture_phong_materials.setVec3("directionalLight.specular", directionalLight.Specular);
+	}
+	else {
+		shader_texture_phong_materials.setVec3("directionalLight.direction", emptyVec3);
+		shader_texture_phong_materials.setVec3("directionalLight.ambient", emptyVec3);
+		shader_texture_phong_materials.setVec3("directionalLight.diffuse", emptyVec3);
+		shader_texture_phong_materials.setVec3("directionalLight.specular", emptyVec3);
+	}
+
+	for (int i = 0; i < pointLights.size(); ++i) {
+		std::string index = std::to_string(i);
+		const auto& pointLight = pointLights[i];
+		if (pointLight.Enabled) {
+			shader_texture_phong_materials.setVec3("pointLights[" + index + "].position", pointLight.Position);
+			shader_texture_phong_materials.setFloat("pointLights[" + index + "].constant", pointLight.Constant);
+			shader_texture_phong_materials.setFloat("pointLights[" + index + "].linear", pointLight.Linear);
+			shader_texture_phong_materials.setFloat("pointLights[" + index + "].quadratic", pointLight.Quadratic);
+			shader_texture_phong_materials.setVec3("pointLights[" + index + "].ambient", pointLight.Ambient);
+			shader_texture_phong_materials.setVec3("pointLights[" + index + "].diffuse", pointLight.Diffuse);
+		}
+		else {
+			shader_texture_phong_materials.setVec3("pointLights[" + index + "].specular", emptyVec3);
+			shader_texture_phong_materials.setVec3("pointLights[" + index + "].position", emptyVec3);
+			shader_texture_phong_materials.setFloat("pointLights[" + index + "].constant", 0.0f);
+			shader_texture_phong_materials.setFloat("pointLights[" + index + "].linear", 0.0f);
+			shader_texture_phong_materials.setFloat("pointLights[" + index + "].quadratic", 0.0f);
+			shader_texture_phong_materials.setVec3("pointLights[" + index + "].ambient", emptyVec3);
+			shader_texture_phong_materials.setVec3("pointLights[" + index + "].diffuse", emptyVec3);
+			shader_texture_phong_materials.setVec3("pointLights[" + index + "].specular", emptyVec3);
+		}
+	}
+
+	for (int i = 0; i < spotLights.size(); ++i) {
+		std::string index = std::to_string(i);
+		const auto& spotLight = spotLights[i];
+		if (spotLight.Enabled) {
+			shader_texture_phong_materials.setVec3("spotLights[" + index + "].position", spotLight.Position);
+			shader_texture_phong_materials.setVec3("spotLights[" + index + "].direction", spotLight.Direction);
+			shader_texture_phong_materials.setFloat("spotLights[" + index + "].innerCutOff", spotLight.InnerCutOff);
+			shader_texture_phong_materials.setFloat("spotLights[" + index + "].outerCutOff", spotLight.OuterCutOff);
+			shader_texture_phong_materials.setFloat("spotLights[" + index + "].constant", spotLight.Constant);
+			shader_texture_phong_materials.setFloat("spotLights[" + index + "].linear", spotLight.Linear);
+			shader_texture_phong_materials.setFloat("spotLights[" + index + "].quadratic", spotLight.Quadratic);
+			shader_texture_phong_materials.setVec3("spotLights[" + index + "].ambient", spotLight.Ambient);
+			shader_texture_phong_materials.setVec3("spotLights[" + index + "].diffuse", spotLight.Diffuse);
+		}
+		else {
+			shader_texture_phong_materials.setVec3("spotLights[" + index + "].specular", emptyVec3);
+			shader_texture_phong_materials.setVec3("spotLights[" + index + "].position", emptyVec3);
+			shader_texture_phong_materials.setVec3("spotLights[" + index + "].direction", emptyVec3);
+			shader_texture_phong_materials.setFloat("spotLights[" + index + "].innerCutOff", 0.0f);
+			shader_texture_phong_materials.setFloat("spotLights[" + index + "].outerCutOff", 0.0f);
+			shader_texture_phong_materials.setFloat("spotLights[" + index + "].constant", 0.0f);
+			shader_texture_phong_materials.setFloat("spotLights[" + index + "].linear", 0.0f);
+			shader_texture_phong_materials.setFloat("spotLights[" + index + "].quadratic", 0.0f);
+			shader_texture_phong_materials.setVec3("spotLights[" + index + "].ambient", emptyVec3);
+			shader_texture_phong_materials.setVec3("spotLights[" + index + "].diffuse", emptyVec3);
+			shader_texture_phong_materials.setVec3("spotLights[" + index + "].specular", emptyVec3);
+		}
+	}
+
+	Shader& shader_color_phong_materials = shaders.find("shader_color_phong_materials")->second;
+	shader_color_phong_materials.use();
+	shader_color_phong_materials.setMatrixFloat4v("view", 1, view);
+	shader_color_phong_materials.setMatrixFloat4v("projection", 1, projection);
+	shader_color_phong_materials.setVec3("viewPosition", camera.Position);
+
+	if (directionalLight.Enabled) {
+		shader_color_phong_materials.setVec3("directionalLight.direction", directionalLight.Direction);
+		shader_color_phong_materials.setVec3("directionalLight.ambient", directionalLight.Ambient);
+		shader_color_phong_materials.setVec3("directionalLight.diffuse", directionalLight.Diffuse);
+		shader_color_phong_materials.setVec3("directionalLight.specular", directionalLight.Specular);
+	}
+	else {
+		shader_color_phong_materials.setVec3("directionalLight.direction", emptyVec3);
+		shader_color_phong_materials.setVec3("directionalLight.ambient", emptyVec3);
+		shader_color_phong_materials.setVec3("directionalLight.diffuse", emptyVec3);
+		shader_color_phong_materials.setVec3("directionalLight.specular", emptyVec3);
+	}
+
+	for (int i = 0; i < pointLights.size(); ++i) {
+		std::string index = std::to_string(i);
+		const auto& pointLight = pointLights[i];
+		if (pointLight.Enabled) {
+			shader_color_phong_materials.setVec3("pointLights[" + index + "].position", pointLight.Position);
+			shader_color_phong_materials.setFloat("pointLights[" + index + "].constant", pointLight.Constant);
+			shader_color_phong_materials.setFloat("pointLights[" + index + "].linear", pointLight.Linear);
+			shader_color_phong_materials.setFloat("pointLights[" + index + "].quadratic", pointLight.Quadratic);
+			shader_color_phong_materials.setVec3("pointLights[" + index + "].ambient", pointLight.Ambient);
+			shader_color_phong_materials.setVec3("pointLights[" + index + "].diffuse", pointLight.Diffuse);
+		}
+		else {
+			shader_color_phong_materials.setVec3("pointLights[" + index + "].specular", emptyVec3);
+			shader_color_phong_materials.setVec3("pointLights[" + index + "].position", emptyVec3);
+			shader_color_phong_materials.setFloat("pointLights[" + index + "].constant", 0.0f);
+			shader_color_phong_materials.setFloat("pointLights[" + index + "].linear", 0.0f);
+			shader_color_phong_materials.setFloat("pointLights[" + index + "].quadratic", 0.0f);
+			shader_color_phong_materials.setVec3("pointLights[" + index + "].ambient", emptyVec3);
+			shader_color_phong_materials.setVec3("pointLights[" + index + "].diffuse", emptyVec3);
+			shader_color_phong_materials.setVec3("pointLights[" + index + "].specular", emptyVec3);
+		}
+	}
+
+	for (int i = 0; i < spotLights.size(); ++i) {
+		std::string index = std::to_string(i);
+		const auto& spotLight = spotLights[i];
+		if (spotLight.Enabled) {
+			shader_color_phong_materials.setVec3("spotLights[" + index + "].position", spotLight.Position);
+			shader_color_phong_materials.setVec3("spotLights[" + index + "].direction", spotLight.Direction);
+			shader_color_phong_materials.setFloat("spotLights[" + index + "].innerCutOff", spotLight.InnerCutOff);
+			shader_color_phong_materials.setFloat("spotLights[" + index + "].outerCutOff", spotLight.OuterCutOff);
+			shader_color_phong_materials.setFloat("spotLights[" + index + "].constant", spotLight.Constant);
+			shader_color_phong_materials.setFloat("spotLights[" + index + "].linear", spotLight.Linear);
+			shader_color_phong_materials.setFloat("spotLights[" + index + "].quadratic", spotLight.Quadratic);
+			shader_color_phong_materials.setVec3("spotLights[" + index + "].ambient", spotLight.Ambient);
+			shader_color_phong_materials.setVec3("spotLights[" + index + "].diffuse", spotLight.Diffuse);
+		}
+		else {
+			shader_color_phong_materials.setVec3("spotLights[" + index + "].specular", emptyVec3);
+			shader_color_phong_materials.setVec3("spotLights[" + index + "].position", emptyVec3);
+			shader_color_phong_materials.setVec3("spotLights[" + index + "].direction", emptyVec3);
+			shader_color_phong_materials.setFloat("spotLights[" + index + "].innerCutOff", 0.0f);
+			shader_color_phong_materials.setFloat("spotLights[" + index + "].outerCutOff", 0.0f);
+			shader_color_phong_materials.setFloat("spotLights[" + index + "].constant", 0.0f);
+			shader_color_phong_materials.setFloat("spotLights[" + index + "].linear", 0.0f);
+			shader_color_phong_materials.setFloat("spotLights[" + index + "].quadratic", 0.0f);
+			shader_color_phong_materials.setVec3("spotLights[" + index + "].ambient", emptyVec3);
+			shader_color_phong_materials.setVec3("spotLights[" + index + "].diffuse", emptyVec3);
+			shader_color_phong_materials.setVec3("spotLights[" + index + "].specular", emptyVec3);
+		}
+	}
+
+	// Declared early that way I'm sure it exists
+	// Should still reset it every time though
+	glm::mat4 model = glm::mat4(1.0f);
+
+	//////////////////////////////////////////////////////////////
 	// Render OpenGL
 	if (drawPlane) {
-		glBindVertexArray(VAO[0]);
+		shader_texture_phong_materials.use();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, planePosition);
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(5.0f, 5.0f, 1.0f));
+		shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
 
+		glBindVertexArray(VAO[0]);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture_container);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture_awesomeface);
-
-		Shader& shader_texture_phong = shaders.find("shader_texture_phong")->second;
-		shader_texture_phong.use();
-		shader_texture_phong.setFloat("mixValue", 0.0f);
-
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(planePosition[0], planePosition[1], planePosition[2]));
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(5.0f, 5.0f, 1.0f));
-
-		shader_texture_phong.setMatrixFloat4v("model", 1, model);
-		shader_texture_phong.setMatrixFloat4v("view", 1, view);
-		shader_texture_phong.setMatrixFloat4v("projection", 1, projection);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+		// TODO: unbind/deactivate textures?
+		// TODO: functionize
 		Shader::release();
 		glBindVertexArray(0);
 	}
 	if (drawCubes) {
-		glBindVertexArray(VAO[1]);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture_container);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture_awesomeface);
-
-		Shader& shader_texture_phong = shaders.find("shader_texture_phong")->second;
-		shader_texture_phong.use();
-		shader_texture_phong.setFloat("mixValue", 0.0f);
-
-		shader_texture_phong.setMatrixFloat4v("view", 1, view);
-		shader_texture_phong.setMatrixFloat4v("projection", 1, projection);
-
-		shader_texture_phong.setVec3("lightColor", lightColor);
-		shader_texture_phong.setVec3("lightPosition", lightPosition + lightPositionOffset);
-		shader_texture_phong.setVec3("viewPosition", camera.Position);
-
-		shader_texture_phong.setFloat("ambientStrength", ambientStrength);
-		shader_texture_phong.setFloat("specularStrength", specularStrength);
-		shader_texture_phong.setFloat("diffuseStrength", diffuseStrength);
-		shader_texture_phong.setFloat("shininess", (float)shininess);
+		shader_texture_phong_materials.use();
+		shader_texture_phong_materials.setFloat("material.shininess", (float)shininess);
 
 		glm::vec3 cubePositions[] = {
 			glm::vec3(0.0f,  5.0f,  0.0f),
@@ -543,50 +571,25 @@ void render(double deltaTime) {
 			glm::vec3(-1.3f,  6.0f, -1.5f)
 		};
 
+		glBindVertexArray(VAO[1]);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture_container2);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture_container2Specular);
+
 		for (int i = 0; i < 10; ++i) {
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
 			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(30.0f) + 30 * i, glm::vec3(1.0f, 0.0f, 0.0f));
 			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f) + 20 * i, glm::vec3(0.0f, 1.0f, 0.0f));
 			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(10.0f) + 10 * i, glm::vec3(0.0f, 0.0f, 1.0f));
-			shader_texture_phong.setMatrixFloat4v("model", 1, model);
+			shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
-		// Material cube
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-2.0f, 2.0f, -5.0f));
-		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(30.0f) + 30 * i, glm::vec3(1.0f, 0.0f, 0.0f));
-		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f) + 20 * i, glm::vec3(0.0f, 1.0f, 0.0f));
-		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(10.0f) + 10 * i, glm::vec3(0.0f, 0.0f, 1.0f));
-
-		Shader& shader_color_material = shaders.find("shader_color_material")->second;
-		shader_color_material.use();
-		shader_color_material.setMatrixFloat4v("model", 1, model);
-		shader_color_material.setMatrixFloat4v("view", 1, view);
-		shader_color_material.setMatrixFloat4v("projection", 1, projection);
-
-		shader_color_material.setVec3("viewPosition", camera.Position);
-
-		shader_color_material.setVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
-		shader_color_material.setVec3("material.specular", glm::vec3(1.0f, 0.5f, 0.31f));
-		shader_color_material.setVec3("material.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-		shader_color_material.setFloat("material.shininess", 32.0f);
-
-		shader_color_material.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		shader_color_material.setVec3("light.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-		shader_color_material.setVec3("light.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
-		shader_color_material.setVec3("light.position", lightPosition + lightPositionOffset);
-
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-
 		// Diffuse map / Specular map cube
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(2.0f, 2.0f, -5.0f));
-		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(30.0f) + 30 * i, glm::vec3(1.0f, 0.0f, 0.0f));
-		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f) + 20 * i, glm::vec3(0.0f, 1.0f, 0.0f));
-		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(10.0f) + 10 * i, glm::vec3(0.0f, 0.0f, 1.0f));
+		glBindVertexArray(VAO[1]);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture_container2);
@@ -595,52 +598,46 @@ void render(double deltaTime) {
 		//glActiveTexture(GL_TEXTURE2);
 		//glBindTexture(GL_TEXTURE_2D, texture_matrix);
 
-		Shader& shader_texture_phong_materials = shaders.find("shader_texture_phong_materials")->second;
 		shader_texture_phong_materials.use();
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(2.0f, 2.0f, -5.0f));
+		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(30.0f) + 30 * i, glm::vec3(1.0f, 0.0f, 0.0f));
+		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f) + 20 * i, glm::vec3(0.0f, 1.0f, 0.0f));
+		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(10.0f) + 10 * i, glm::vec3(0.0f, 0.0f, 1.0f));
 		shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
-		shader_texture_phong_materials.setMatrixFloat4v("view", 1, view);
-		shader_texture_phong_materials.setMatrixFloat4v("projection", 1, projection);
-
-		shader_texture_phong_materials.setVec3("viewPosition", camera.Position);
-
-		shader_texture_phong_materials.setFloat("material.shininess", 32.0f);
-
-		//
-		//
-		//
-		shader_texture_phong_materials.setVec3("directionalLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-		shader_texture_phong_materials.setVec3("directionalLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-		shader_texture_phong_materials.setVec3("directionalLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
-		shader_texture_phong_materials.setVec3("directionalLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-
-		shader_texture_phong_materials.setVec3("pointLights[0].position", lightPosition + lightPositionOffset);
-		shader_texture_phong_materials.setFloat("pointLights[0].constant", 1.0f);
-		shader_texture_phong_materials.setFloat("pointLights[0].linear", 0.09f);
-		shader_texture_phong_materials.setFloat("pointLights[0].quadratic", 0.032f);
-		shader_texture_phong_materials.setVec3("pointLights[0].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-		shader_texture_phong_materials.setVec3("pointLights[0].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
-		shader_texture_phong_materials.setVec3("pointLights[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
-
-		shader_texture_phong_materials.setVec3("spotLights[0].position", camera.Position);
-		shader_texture_phong_materials.setVec3("spotLights[0].direction", camera.Front);
-		shader_texture_phong_materials.setFloat("spotLights[0].innerCutOff", glm::cos(glm::radians(12.5f)));
-		shader_texture_phong_materials.setFloat("spotLights[0].outerCutOff", glm::cos(glm::radians(15.0f)));
-		shader_texture_phong_materials.setFloat("spotLights[0].constant", 1.0f);
-		shader_texture_phong_materials.setFloat("spotLights[0].linear", 0.09f);
-		shader_texture_phong_materials.setFloat("spotLights[0].quadratic", 0.032f);
-		shader_texture_phong_materials.setVec3("spotLights[0].ambient", glm::vec3(0.0f, 0.0f, 0.0f));
-		shader_texture_phong_materials.setVec3("spotLights[0].diffuse", glm::vec3(1.0f, 1.0f, 0.0f));
-		shader_texture_phong_materials.setVec3("spotLights[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		//
-		//
-		//
+		shader_texture_phong_materials.setFloat("material.shininess", (float)shininess);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+		// TODO: Material cube
+		// TODO: Material cube
+		// TODO: Material cube
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-2.0f, 2.0f, -5.0f));
+		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(30.0f) + 30 * i, glm::vec3(1.0f, 0.0f, 0.0f));
+		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f) + 20 * i, glm::vec3(0.0f, 1.0f, 0.0f));
+		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(10.0f) + 10 * i, glm::vec3(0.0f, 0.0f, 1.0f));
+
+		//glActiveTexture(GL_TEXTURE2);
+		//glBindTexture(GL_TEXTURE_2D, texture_matrix);
+
+		shader_color_phong_materials.use();
+		shader_color_phong_materials.setMatrixFloat4v("model", 1, model);
+		shader_color_phong_materials.setVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+		shader_color_phong_materials.setVec3("material.specular", glm::vec3(1.0f, 0.5f, 0.31f));
+		shader_color_phong_materials.setVec3("material.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+		shader_color_phong_materials.setFloat("material.shininess", (float)shininess);
+
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		//glActiveTexture(GL_TEXTURE2);
+		//glBindTexture(GL_TEXTURE_2D, 0);
 
 		Shader::release();
 		glBindVertexArray(0);
 	}
-	if (drawLight) {
+	if (drawLights) {
 		glBindVertexArray(VAO[1]);
 
 		glActiveTexture(GL_TEXTURE0);
@@ -648,27 +645,41 @@ void render(double deltaTime) {
 
 		Shader& shader_texture_simple = shaders.find("shader_texture_simple")->second;
 		shader_texture_simple.use();
-
 		shader_texture_simple.setMatrixFloat4v("view", 1, view);
 		shader_texture_simple.setMatrixFloat4v("projection", 1, projection);
 
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, lightPosition + lightPositionOffset);
-		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-		shader_texture_simple.setMatrixFloat4v("model", 1, model);
+		for (auto const& pointLight : pointLights) {
+			if (pointLight.Enabled && pointLight.Visible) {
+				glm::mat4 model = glm::mat4(1.0f);
+				model = glm::translate(model, pointLight.Position);
+				model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+				shader_texture_simple.setMatrixFloat4v("model", 1, model);
 
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+		}
+
+		for (auto const& spotLight : spotLights) {
+			if (spotLight.Enabled && spotLight.Visible) {
+				glm::mat4 model = glm::mat4(1.0f);
+				model = glm::translate(model, spotLight.Position);
+				model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+				// TODO
+				//model = glm::rotate(model, (float)glm::radians(glfwGetTime()), spotLight.Direction);
+				//glm::lookAt(spotLight.Position, spotLight.Direction, glm::vec3(0.0f, 1.0f, 0.0f));
+				shader_texture_simple.setMatrixFloat4v("model", 1, model);
+
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+		}
 
 		Shader::release();
 		glBindVertexArray(0);
 	}
 
 	// gizmo
-	{
-		glViewport(0, 0, 100, 100);
+	if (drawGizmo) {
+		glViewport(10.0f, 10.0f, 100.0f, 100.0f);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glBindVertexArray(VAOGizmo[0]);
@@ -683,20 +694,7 @@ void render(double deltaTime) {
 		viewGizmo[3][2] = -2.5f;
 		shader_color_uniform.setMatrixFloat4v("view", 1, viewGizmo);
 
-		const float DEFAULT_FOV = 45.0f;
-		glm::mat4 projectionPerspectiveGizmo = glm::perspective(glm::radians(DEFAULT_FOV), 1.0f, 0.1f, 100.0f);
-		glm::mat4 projectionOrthoGizmo = glm::ortho(
-			-1.0f, 1.0f,
-			-1.0f, 1.0f,
-			0.1f, 100.0f);
-
-		glm::mat4 projectionGizmo = glm::mat4(1.0f);
-		float mixProjections = getBezierSimplified(mixValue, glm::vec2(0.0f, 1.0f), glm::vec2(0.0f, 1.0f));
-		// fun when function of time
-		projectionGizmo[0] = glm::mix(projectionPerspectiveGizmo[0], projectionOrthoGizmo[0], mixProjections);
-		projectionGizmo[1] = glm::mix(projectionPerspectiveGizmo[1], projectionOrthoGizmo[1], mixProjections);
-		projectionGizmo[2] = glm::mix(projectionPerspectiveGizmo[2], projectionOrthoGizmo[2], mixProjections);
-		projectionGizmo[3] = glm::mix(projectionPerspectiveGizmo[3], projectionOrthoGizmo[3], mixProjections);
+		glm::mat4 projectionGizmo = lerpProjectionMatrices(projectionPerspectiveGizmo, projectionOrthoGizmo, mixValue);
 
 		shader_color_uniform.setMatrixFloat4v("projection", 1, projectionGizmo);
 
@@ -792,10 +790,77 @@ void render(double deltaTime) {
 		ImGui::SliderInt("Shininess", &shininess, 2, 256);
 	}
 
+	if (ImGui::CollapsingHeader("Lights", ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::TreeNode("Directional Light")) {
+			ImGui::Checkbox("Enabled", &directionalLight.Enabled);
+			ImGui::Checkbox("Visible", &directionalLight.Visible);
+
+			ImGui::DragFloat3("Direction", &directionalLight.Direction[0], 0.1f, -1.0f, 1.0f);
+
+			ImGui::ColorEdit3("Ambient", &directionalLight.Ambient[0], ImGuiColorEditFlags_Float);
+			ImGui::ColorEdit3("Diffuse", &directionalLight.Diffuse[0], ImGuiColorEditFlags_Float);
+			ImGui::ColorEdit3("Specular", &directionalLight.Specular[0], ImGuiColorEditFlags_Float);
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Point Lights")) {
+			// TODO: name
+			for (int i = 0; i < pointLights.size(); ++i) {
+				PointLight& pointLight = pointLights[i];
+				std::string text("Point Light [" + std::to_string(i) + "]");
+				if (ImGui::TreeNode(text.c_str())) {
+					ImGui::Checkbox("Enabled", &pointLight.Enabled);
+					ImGui::Checkbox("Visible", &pointLight.Visible);
+
+					ImGui::DragFloat3("Position", &pointLight.Position[0], 0.1f, -10.0f, 10.0f);
+
+					ImGui::DragFloat("Constant", &pointLight.Constant, 0.01f, 0.0f, 1.0f);
+					ImGui::DragFloat("Linear", &pointLight.Linear, 0.01f, 0.0f, 1.0f);
+					ImGui::DragFloat("Quadratic", &pointLight.Quadratic, 0.01f, 0.0f, 1.0f);
+
+					ImGui::ColorEdit3("Ambient", &pointLight.Ambient[0], ImGuiColorEditFlags_Float);
+					ImGui::ColorEdit3("Diffuse", &pointLight.Diffuse[0], ImGuiColorEditFlags_Float);
+					ImGui::ColorEdit3("Specular", &pointLight.Specular[0], ImGuiColorEditFlags_Float);
+					ImGui::TreePop();
+				}
+			}
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Spot Light")) {
+			for (int i = 0; i < spotLights.size(); ++i) {
+				SpotLight& spotLight = spotLights[i];
+				std::string text("Spot Light [" + std::to_string(i) + "]");
+				if (ImGui::TreeNode(text.c_str())) {
+					ImGui::Checkbox("Enabled", &spotLight.Enabled);
+					ImGui::Checkbox("Visible", &spotLight.Visible);
+
+					ImGui::DragFloat3("Position", &spotLight.Position[0], 0.1f, -10.0f, 10.0f);
+					ImGui::DragFloat3("Direction", &spotLight.Direction[0], 0.1f, -1.0f, 1.0f);
+
+					float tempInnerCutOff(glm::degrees(glm::acos(spotLight.InnerCutOff)));
+					float tempOuterCutOff(glm::degrees(glm::acos(spotLight.OuterCutOff)));
+					ImGui::DragFloat("Inner Cut Off", &tempInnerCutOff, 0.5f, 0.1f, 45.0f);
+					ImGui::DragFloat("Outer Cut Off", &tempOuterCutOff, 0.5f, 0.1f, 45.0f);
+					spotLight.InnerCutOff = glm::cos(glm::radians(tempInnerCutOff));
+					spotLight.OuterCutOff = glm::cos(glm::radians(tempOuterCutOff));
+
+					ImGui::DragFloat("Constant", &spotLight.Constant, 0.01f, 0.0f, 1.0f);
+					ImGui::DragFloat("Linear", &spotLight.Linear, 0.01f, 0.0f, 1.0f);
+					ImGui::DragFloat("Quadratic", &spotLight.Quadratic, 0.01f, 0.0f, 1.0f);
+
+					ImGui::ColorEdit3("Ambient", &spotLight.Ambient[0], ImGuiColorEditFlags_Float);
+					ImGui::ColorEdit3("Diffuse", &spotLight.Diffuse[0], ImGuiColorEditFlags_Float);
+					ImGui::ColorEdit3("Specular", &spotLight.Specular[0], ImGuiColorEditFlags_Float);
+					ImGui::TreePop();
+				}
+			}
+			ImGui::TreePop();
+		}
+	}
+
 	if (ImGui::CollapsingHeader("Draws", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::Checkbox("Draw Textured Rectangle?", &drawPlane);
 		ImGui::Checkbox("Draw Textured Cube?", &drawCubes);
-		ImGui::Checkbox("Draw Light Cube?", &drawLight);
+		ImGui::Checkbox("Draw Light Cube?", &drawLights);
 
 		ImGui::SliderFloat("Mix Value", &mixValue, 0.0f, 1.0f);
 
