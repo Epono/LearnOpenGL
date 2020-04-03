@@ -414,9 +414,9 @@ void render(double deltaTime) {
 			shader_texture_phong_materials.setFloat("pointLights[" + index + "].quadratic", pointLight.Quadratic);
 			shader_texture_phong_materials.setVec3("pointLights[" + index + "].ambient", pointLight.Ambient);
 			shader_texture_phong_materials.setVec3("pointLights[" + index + "].diffuse", pointLight.Diffuse);
+			shader_texture_phong_materials.setVec3("pointLights[" + index + "].specular", pointLight.Specular);
 		}
 		else {
-			shader_texture_phong_materials.setVec3("pointLights[" + index + "].specular", emptyVec3);
 			shader_texture_phong_materials.setVec3("pointLights[" + index + "].position", emptyVec3);
 			shader_texture_phong_materials.setFloat("pointLights[" + index + "].constant", 0.0f);
 			shader_texture_phong_materials.setFloat("pointLights[" + index + "].linear", 0.0f);
@@ -440,9 +440,9 @@ void render(double deltaTime) {
 			shader_texture_phong_materials.setFloat("spotLights[" + index + "].quadratic", spotLight.Quadratic);
 			shader_texture_phong_materials.setVec3("spotLights[" + index + "].ambient", spotLight.Ambient);
 			shader_texture_phong_materials.setVec3("spotLights[" + index + "].diffuse", spotLight.Diffuse);
+			shader_texture_phong_materials.setVec3("spotLights[" + index + "].specular", spotLight.Specular);
 		}
 		else {
-			shader_texture_phong_materials.setVec3("spotLights[" + index + "].specular", emptyVec3);
 			shader_texture_phong_materials.setVec3("spotLights[" + index + "].position", emptyVec3);
 			shader_texture_phong_materials.setVec3("spotLights[" + index + "].direction", emptyVec3);
 			shader_texture_phong_materials.setFloat("spotLights[" + index + "].innerCutOff", 0.0f);
