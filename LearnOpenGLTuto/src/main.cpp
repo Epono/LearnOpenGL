@@ -86,9 +86,10 @@ float diffuseStrength = 1.0f;
 int shininess = 32;
 
 bool	drawPlane = true;
-bool	drawCubes = true;
+bool	drawTexturedCubes = true;
+bool	drawMaterialCubes = true;
 bool	drawLights = true;
-bool	drawGizmo = true;
+bool	drawGizmo = false;
 float	mixValue = 0.0f;
 
 Camera camera(glm::vec3(0.0f, 2.5f, 10.0f));
@@ -196,6 +197,12 @@ int main() {
 			accumulator -= dt;
 		}
 
+		// TODO
+		GLenum error = glGetError();
+		if (error != 0) {
+			std::cout << "ERROR: " << error << std::endl;
+		}
+
 
 		// render
 		render(dt);
@@ -218,7 +225,7 @@ void createOpenGLObjects() {
 	glGenBuffers(1, VBOGizmo);
 	glGenBuffers(1, EBO);
 
-
+	// PLANE
 	glBindVertexArray(VAO[0]);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
@@ -239,6 +246,11 @@ void createOpenGLObjects() {
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(8 * sizeof(float)));
 	glEnableVertexAttribArray(3);
 
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	// CUBE
 	glBindVertexArray(VAO[1]);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
@@ -534,18 +546,19 @@ void render(double deltaTime) {
 	//////////////////////////////////////////////////////////////
 	// Render OpenGL
 	if (drawPlane) {
-		shader_texture_phong_materials.use();
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, planePosition);
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(5.0f, 5.0f, 1.0f));
-		shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
-
 		glBindVertexArray(VAO[0]);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture_container);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, 0);
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, planePosition);
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(5.0f, 5.0f, 1.0f));
+
+		shader_texture_phong_materials.use();
+		shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -554,7 +567,7 @@ void render(double deltaTime) {
 		Shader::release();
 		glBindVertexArray(0);
 	}
-	if (drawCubes) {
+	if (drawTexturedCubes) {
 		shader_texture_phong_materials.use();
 		shader_texture_phong_materials.setFloat("material.shininess", (float)shininess);
 
@@ -588,31 +601,21 @@ void render(double deltaTime) {
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(2.0f, 2.0f, -5.0f));
+		shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		////glActiveTexture(GL_TEXTURE2);
+		////glBindTexture(GL_TEXTURE_2D, 0);
+
+		Shader::release();
+		glBindVertexArray(0);
+	}
+	if (drawMaterialCubes) {
 		// Diffuse map / Specular map cube
 		glBindVertexArray(VAO[1]);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture_container2);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture_container2Specular);
-		//glActiveTexture(GL_TEXTURE2);
-		//glBindTexture(GL_TEXTURE_2D, texture_matrix);
-
-		shader_texture_phong_materials.use();
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(2.0f, 2.0f, -5.0f));
-		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(30.0f) + 30 * i, glm::vec3(1.0f, 0.0f, 0.0f));
-		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f) + 20 * i, glm::vec3(0.0f, 1.0f, 0.0f));
-		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(10.0f) + 10 * i, glm::vec3(0.0f, 0.0f, 1.0f));
-		shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
-		shader_texture_phong_materials.setFloat("material.shininess", (float)shininess);
-
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-
-
-		// TODO: Material cube
-		// TODO: Material cube
-		// TODO: Material cube
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(-2.0f, 2.0f, -5.0f));
 		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(30.0f) + 30 * i, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -630,9 +633,6 @@ void render(double deltaTime) {
 		shader_color_phong_materials.setFloat("material.shininess", (float)shininess);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-
-		//glActiveTexture(GL_TEXTURE2);
-		//glBindTexture(GL_TEXTURE_2D, 0);
 
 		Shader::release();
 		glBindVertexArray(0);
@@ -791,7 +791,7 @@ void render(double deltaTime) {
 	}
 
 	if (ImGui::CollapsingHeader("Lights", ImGuiTreeNodeFlags_DefaultOpen)) {
-		if (ImGui::TreeNode("Directional Light")) {
+		if (ImGui::TreeNodeEx("Directional Light", ImGuiTreeNodeFlags_DefaultOpen)) {
 			ImGui::Checkbox("Enabled", &directionalLight.Enabled);
 			ImGui::Checkbox("Visible", &directionalLight.Visible);
 
@@ -807,7 +807,7 @@ void render(double deltaTime) {
 			for (int i = 0; i < pointLights.size(); ++i) {
 				PointLight& pointLight = pointLights[i];
 				std::string text("Point Light [" + std::to_string(i) + "]");
-				if (ImGui::TreeNode(text.c_str())) {
+				if (ImGui::TreeNodeEx(text.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
 					ImGui::Checkbox("Enabled", &pointLight.Enabled);
 					ImGui::Checkbox("Visible", &pointLight.Visible);
 
@@ -829,7 +829,7 @@ void render(double deltaTime) {
 			for (int i = 0; i < spotLights.size(); ++i) {
 				SpotLight& spotLight = spotLights[i];
 				std::string text("Spot Light [" + std::to_string(i) + "]");
-				if (ImGui::TreeNode(text.c_str())) {
+				if (ImGui::TreeNodeEx(text.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
 					ImGui::Checkbox("Enabled", &spotLight.Enabled);
 					ImGui::Checkbox("Visible", &spotLight.Visible);
 
@@ -858,9 +858,10 @@ void render(double deltaTime) {
 	}
 
 	if (ImGui::CollapsingHeader("Draws", ImGuiTreeNodeFlags_DefaultOpen)) {
-		ImGui::Checkbox("Draw Textured Rectangle?", &drawPlane);
-		ImGui::Checkbox("Draw Textured Cube?", &drawCubes);
-		ImGui::Checkbox("Draw Light Cube?", &drawLights);
+		ImGui::Checkbox("Draw Plane?", &drawPlane);
+		ImGui::Checkbox("Draw Textured Cubes?", &drawTexturedCubes);
+		ImGui::Checkbox("Draw Material Cubes?", &drawMaterialCubes);
+		ImGui::Checkbox("Draw Lights?", &drawLights);
 
 		ImGui::SliderFloat("Mix Value", &mixValue, 0.0f, 1.0f);
 
