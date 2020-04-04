@@ -10,7 +10,9 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
+
 #include <imgui_bezier.h>
+#include <imGuIZMO.quat/imGuIZMOquat.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -953,6 +955,23 @@ void render(double deltaTime) {
 	ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Performance", nullptr, ImGuiWindowFlags_None);
 	{
+		//mode3Axes = 0x0001, //0b0000'0001, 
+		//modeDirection = 0x0002, //0b0000'0010,
+		//modeDirPlane = 0x0004, //0b0000'0100,
+		//modeDual = 0x0008, //0b0000'1000,
+		//modePanDolly = 0x0010, //0b0001'0000,
+		//modeMask = 0x00ff,
+
+
+		//cubeAtOrigin = 0x0100, //0b0000'0000, 
+		//sphereAtOrigin = 0x0200, //0b0001'0000,
+		//noSolidAtOrigin = 0x0400, //0b0010'0000,
+		//modeFullAxes = 0x0800,
+		//axesModeMask = 0xff00
+
+		static quat qRot = quat(1.f, 0.f, 0.f, 0.f);
+		ImGui::gizmo3D("Spot light dir", spotLights[0].Direction /*, size,  mode */);
+
 		static std::vector<float> values(100, 0);
 		values.push_back(1000.0f / ImGui::GetIO().Framerate);
 		if (values.size() > 100) {
@@ -1079,6 +1098,7 @@ void processInput(GLFWwindow* window, double deltaTime) {
 	lastMiddleClick = isMiddleMousePressed;
 
 	// KEYBOARD
+
 	// EXIT
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
@@ -1095,7 +1115,7 @@ void processInput(GLFWwindow* window, double deltaTime) {
 		camera.processKeyboard(CameraMovement::RIGHT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 		camera.processKeyboard(CameraMovement::UP, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 		camera.processKeyboard(CameraMovement::DOWN, deltaTime);
 
 

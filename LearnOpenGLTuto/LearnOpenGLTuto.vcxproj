@@ -71,28 +71,28 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)/Include;$(ProjectDir)/includes;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)/Include/imGuIZMO.quat;$(SolutionDir)/Include;$(ProjectDir)/includes;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)/Libs/x86;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)/Include;$(ProjectDir)/includes;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)/Include/imGuIZMO.quat;$(SolutionDir)/Include;$(ProjectDir)/includes;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)/Libs/x64;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)/Include;$(ProjectDir)/includes;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)/Include/imGuIZMO.quat;$(SolutionDir)/Include;$(ProjectDir)/includes;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)/Libs/x86;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)/Include;$(ProjectDir)/includes;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)/Include/imGuIZMO.quat;$(SolutionDir)/Include;$(ProjectDir)/includes;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)/Libs/x64;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
@@ -163,6 +163,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Include\glad\glad.c" />
+    <ClCompile Include="..\Include\imGuIZMO.quat\imGuIZMOquat.cpp" />
     <ClCompile Include="..\Include\imgui\imgui.cpp" />
     <ClCompile Include="..\Include\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\Include\imgui\imgui_draw.cpp" />
@@ -181,6 +182,11 @@
     <ClInclude Include="..\Include\glad\glad.h" />
     <ClInclude Include="..\Include\GLFW\glfw3.h" />
     <ClInclude Include="..\Include\GLFW\glfw3native.h" />
+    <ClInclude Include="..\Include\imGuIZMO.quat\imGuIZMOquat.h" />
+    <ClInclude Include="..\Include\imGuIZMO.quat\vgConfig.h" />
+    <ClInclude Include="..\Include\imGuIZMO.quat\vGizmo.h" />
+    <ClInclude Include="..\Include\imGuIZMO.quat\vGizmoMath.h" />
+    <ClInclude Include="..\Include\imGuIZMO.quat\vgMath.h" />
     <ClInclude Include="..\Include\imgui\imconfig.h" />
     <ClInclude Include="..\Include\imgui\imgui.h" />
     <ClInclude Include="..\Include\imgui\imgui_impl_glfw.h" />

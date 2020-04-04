@@ -69,6 +69,9 @@
     <ClCompile Include="src\spot_light.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Include\imGuIZMO.quat\imGuIZMOquat.cpp">
+      <Filter>Source Files\Dependencies</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Include\glad\glad.h">
@@ -130,6 +133,21 @@
     </ClInclude>
     <ClInclude Include="includes\spot_light.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\imGuIZMO.quat\imGuIZMOquat.h">
+      <Filter>Header Files\Dependencies</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\imGuIZMO.quat\vgConfig.h">
+      <Filter>Header Files\Dependencies</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\imGuIZMO.quat\vGizmo.h">
+      <Filter>Header Files\Dependencies</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\imGuIZMO.quat\vGizmoMath.h">
+      <Filter>Header Files\Dependencies</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\imGuIZMO.quat\vgMath.h">
+      <Filter>Header Files\Dependencies</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
