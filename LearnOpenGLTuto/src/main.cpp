@@ -102,6 +102,8 @@ DirectionalLight directionalLight;
 std::vector<PointLight> pointLights{ PointLight(glm::vec3(-2.5f, 5.0f, -5.0f)), PointLight(glm::vec3(2.5f, 5.0f, -5.0f)) };
 std::vector<SpotLight> spotLights{ SpotLight(glm::vec3(0.0f, 2.0f, -5.0f), glm::vec3(0.0f, -1.0f, 0.0f)) };
 
+std::unique_ptr<GLFWwindow, glfwDeleter> window;
+
 int main() {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -109,7 +111,6 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 4);		// Antialiasing (MSAA)
 
-	std::unique_ptr<GLFWwindow, glfwDeleter> window;
 	if (!fullscreen) {
 		window.reset(glfwCreateWindow(width, height, "LearnOpenGL", nullptr, nullptr));
 		const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
@@ -166,6 +167,8 @@ int main() {
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigWindowsResizeFromEdges = true;
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	// setup Dear ImGui style
 	ImGui::StyleColorsDark();
@@ -836,7 +839,8 @@ void render(double deltaTime) {
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+	ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(ImVec2(main_viewport->GetWorkPos().x + 650, main_viewport->GetWorkPos().y + 20), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_None);
 
@@ -945,7 +949,7 @@ void render(double deltaTime) {
 	}
 	ImGui::End();
 
-	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(main_viewport->GetWorkPos().x + 650, main_viewport->GetWorkPos().y + 20), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Performance", nullptr, ImGuiWindowFlags_None);
 	{
@@ -967,8 +971,31 @@ void render(double deltaTime) {
 	}
 	ImGui::End();
 
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Dear ImGui magic to enable viewport and docking
 	ImGui::Render();
+	int display_w, display_h;
+	glfwGetFramebufferSize(window.get(), &display_w, &display_h);
+	glViewport(0, 0, display_w, display_h);
+	glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0f);
+	//glClear(GL_COLOR_BUFFER_BIT);
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	// Update and Render additional Platform Windows
+	// (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
+	//  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		GLFWwindow* backup_current_context = glfwGetCurrentContext();
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+		glfwMakeContextCurrent(backup_current_context);
+	}
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Before
+	// ImGui::Render();
+	// ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void cleanUp() {
