@@ -175,5 +175,11 @@
     <None Include="shaders\shader_color_phong_materials.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\shader_color_uniform_simple.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader_color_uniform_simple.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

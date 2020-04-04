@@ -206,6 +206,8 @@
     <None Include="shaders\shader_color_material.vert" />
     <None Include="shaders\shader_color_phong_materials.frag" />
     <None Include="shaders\shader_color_phong_materials.vert" />
+    <None Include="shaders\shader_color_uniform_simple.frag" />
+    <None Include="shaders\shader_color_uniform_simple.vert" />
     <None Include="shaders\shader_texture_phong_materials.frag" />
     <None Include="shaders\shader_texture_phong_materials.vert" />
     <None Include="shaders\shader_texture_simple.frag" />

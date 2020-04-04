@@ -20,8 +20,11 @@ const float DEFAULT_YAW = -90.0f;
 const float DEFAULT_PITCH = 0.0f;
 const float DEFAULT_SPEED = 5.0f;
 const float DEFAULT_SENSITIVITY = 10.0f;
+const float DEFAULT_SENSITIVITY_DRAG = 3.0f;
 const float DEFAULT_FOV = 45.0f;
 const float DEFAULT_ORTHOGRAPHIC_FACTOR = 5.0f;
+const float DEFAULT_NEAR = 0.01f;
+const float DEFAULT_FAR = 100.0f;
 
 // 
 const float MIN_FOV = 1.0f;
@@ -32,9 +35,9 @@ class Camera
 public:
 
 	// OPTIONS
-	float MouseSensitivity = 10.0f;
-	float MouseSensitivityDrag = 3.0f;
-	float MovementSpeed = 5.0f;
+	float MouseSensitivity;
+	float MouseSensitivityDrag;
+	float MovementSpeed;
 
 	// Perspective
 	float FOV = 45.0f;
@@ -43,6 +46,9 @@ public:
 	float OrthographicFactor;
 
 	bool IsPerspective;
+
+	float Near;
+	float Far;
 
 	// EULER ANGLES (should not be directly modified)
 	float Pitch = 0.0f;
@@ -55,13 +61,15 @@ public:
 	glm::vec3 Right;
 	glm::vec3 WorldUp;
 
-	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = DEFAULT_YAW, float pitch = DEFAULT_PITCH, bool isPerspective = true)
-		: MovementSpeed(DEFAULT_SPEED), MouseSensitivity(DEFAULT_SENSITIVITY), FOV(DEFAULT_FOV), OrthographicFactor(DEFAULT_ORTHOGRAPHIC_FACTOR) {
+	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = DEFAULT_YAW, float pitch = DEFAULT_PITCH, bool isPerspective = true, float near = DEFAULT_NEAR, float far = DEFAULT_FAR)
+		: MovementSpeed(DEFAULT_SPEED), MouseSensitivity(DEFAULT_SENSITIVITY), MouseSensitivityDrag(DEFAULT_SENSITIVITY_DRAG), FOV(DEFAULT_FOV), OrthographicFactor(DEFAULT_ORTHOGRAPHIC_FACTOR) {
 		Position = position;
 		WorldUp = worldUp;
 		Yaw = yaw;
 		Pitch = pitch;
 		IsPerspective = isPerspective;
+		Near = near;
+		Far = far;
 		updateCameraVectors();
 	}
 
@@ -117,7 +125,7 @@ public:
 		updateCameraVectors();
 	}
 
-	void processMouseMovement2(const double deltaTime, const float deltaX, const float deltaY) {
+	void processMouseMovementDrag(const double deltaTime, const float deltaX, const float deltaY) {
 		// Negate because the drag movement is in the opposite direction
 		Position -= Right * (float)(deltaX * MouseSensitivityDrag * deltaTime);
 		Position -= Up * (float)(deltaY * MouseSensitivityDrag * deltaTime);

@@ -59,8 +59,8 @@ float keyRepeatSpacing = 0.05f;
 bool keys[350] = { false };
 
 // OpenGL
-unsigned int VAO_Plane, VAO_Cube, VAO_Line;
-unsigned int VBO_Plane, VBO_Cube, VBO_Line;
+unsigned int VAO_Plane, VAO_Cube, VAO_Line, VAO_Grid;
+unsigned int VBO_Plane, VBO_Cube, VBO_Line, VBO_Grid;
 unsigned int EBO_Plane;
 std::map<std::string, Shader> shaders;
 
@@ -78,18 +78,21 @@ glm::vec3 backgroundColor(0.089f, 0.089f, 0.108f);
 
 glm::vec3 planePosition(0.0f, 0.0f, -5.0f);
 
-glm::vec3 lightPosition(0.0f, 5.0f, -5.0f);
-glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
+float	gizmoAmbientStrength = 0.1f;
+float	gizmoSpecularStrength = 0.5f;
+float	gizmoDiffuseStrength = 1.0f;
+int		gizmoShininess = 32;
 
-float ambientStrength = 0.1f;
-float specularStrength = 0.5f;
-float diffuseStrength = 1.0f;
-int shininess = 32;
+int texturedCubeShininess = 32;
+int materialCubeShininess = 32;
 
 bool	drawPlane = true;
 bool	drawTexturedCubes = true;
 bool	drawMaterialCubes = true;
 bool	drawLights = true;
+bool	drawGrid = true;
+int		gridIntervals = 50;
+float	gridSize = 50;
 bool	drawGizmo = true;
 float	mixValue = 0.0f;
 
@@ -219,13 +222,52 @@ int main() {
 	return 0;
 }
 
+void updateGrid() {
+	float intervalSize = (float)2 / gridIntervals;
+	std::vector<float> verticesGrid;
+	for (int i = 0; i <= gridIntervals; ++i) {
+		float j = 1.0f - (i * intervalSize);
+		// bottom 
+		verticesGrid.push_back(j);		// x
+		verticesGrid.push_back(0.0f);	// y
+		verticesGrid.push_back(-1.0f);	// z
+
+		// top
+		verticesGrid.push_back(j);		// x
+		verticesGrid.push_back(0.0f);	// y
+		verticesGrid.push_back(1.0f);	// z
+
+		// left 
+		verticesGrid.push_back(-1.0f);	// x
+		verticesGrid.push_back(0.0f);	// y
+		verticesGrid.push_back(j);		// z
+
+		// right
+		verticesGrid.push_back(1.0f);	// x
+		verticesGrid.push_back(0.0f);	// y
+		verticesGrid.push_back(j);		// z
+	}
+
+	glBindVertexArray(VAO_Grid);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_Grid);
+	glBufferData(GL_ARRAY_BUFFER, verticesGrid.size() * sizeof(float), verticesGrid.data(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+}
+
 void createOpenGLObjects() {
 	glGenVertexArrays(1, &VAO_Plane);
 	glGenVertexArrays(1, &VAO_Cube);
 	glGenVertexArrays(1, &VAO_Line);
+	glGenVertexArrays(1, &VAO_Grid);
+
 	glGenBuffers(1, &VBO_Plane);
 	glGenBuffers(1, &VBO_Cube);
 	glGenBuffers(1, &VBO_Line);
+	glGenBuffers(1, &VBO_Grid);
+
 	glGenBuffers(1, &EBO_Plane);
 
 	// PLANE
@@ -268,7 +310,7 @@ void createOpenGLObjects() {
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(3);
 
-	// Gizmo
+	// GIZMO
 	glBindVertexArray(VAO_Line);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_Line);
@@ -276,6 +318,9 @@ void createOpenGLObjects() {
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	// GRID
+	updateGrid();
 
 	// Unbind
 	glBindVertexArray(0);
@@ -328,6 +373,7 @@ void createShaders() {
 	shader_color_phong_materials.use();
 	shader_color_phong_materials.setInt("material.emission", 2);
 
+	Shader shader_color_uniform_simple("shaders/shader_color_uniform_simple.vert", "shaders/shader_color_uniform_simple.frag");
 
 	shaders.insert(std::make_pair("shader_color_uniform", shader_color_uniform));
 	shaders.insert(std::make_pair("shader_color_attribute", shader_color_attribute));
@@ -336,6 +382,7 @@ void createShaders() {
 	shaders.insert(std::make_pair("shader_texture_simple", shader_texture_simple));
 	shaders.insert(std::make_pair("shader_texture_phong_materials", shader_texture_phong_materials));
 	shaders.insert(std::make_pair("shader_color_phong_materials", shader_color_phong_materials));
+	shaders.insert(std::make_pair("shader_color_uniform_simple", shader_color_uniform_simple));
 }
 
 void update(double deltaTime) {
@@ -343,6 +390,21 @@ void update(double deltaTime) {
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::translate(model, spotLights[0].Position);
 	model = glm::rotate(model, (float)glm::radians(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
+}
+
+void resetOpenGLObjectsState() {
+	// TODO: functionize
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	Shader::release();
+	glBindVertexArray(0);
 }
 
 void render(double deltaTime) {
@@ -355,11 +417,11 @@ void render(double deltaTime) {
 	//////////////////////// 
 	// Fun with projections
 
-	glm::mat4 projectionPerspective = glm::perspective(glm::radians(camera.FOV), aspectRatio, 0.1f, 100.0f);
+	glm::mat4 projectionPerspective = glm::perspective(glm::radians(camera.FOV), aspectRatio, camera.Near, camera.Far);
 	glm::mat4 projectionOrtho = glm::ortho(
 		-aspectRatio * camera.OrthographicFactor, aspectRatio * camera.OrthographicFactor,
 		-camera.OrthographicFactor, camera.OrthographicFactor,
-		0.1f, 100.0f);
+		camera.Near, camera.Far);
 
 	//////////////////////////////////////////////////////////////
 	// mixValue == 1 => full ortho
@@ -549,14 +611,11 @@ void render(double deltaTime) {
 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-		// TODO: unbind/deactivate textures?
-		// TODO: functionize
-		Shader::release();
-		glBindVertexArray(0);
+		resetOpenGLObjectsState();
 	}
 	if (drawTexturedCubes) {
 		shader_texture_phong_materials.use();
-		shader_texture_phong_materials.setFloat("material.shininess", (float)shininess);
+		shader_texture_phong_materials.setFloat("material.shininess", (float)texturedCubeShininess);
 
 		glm::vec3 cubePositions[] = {
 			glm::vec3(0.0f,  5.0f,  0.0f),
@@ -593,11 +652,7 @@ void render(double deltaTime) {
 		shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		////glActiveTexture(GL_TEXTURE2);
-		////glBindTexture(GL_TEXTURE_2D, 0);
-
-		Shader::release();
-		glBindVertexArray(0);
+		resetOpenGLObjectsState();
 	}
 	if (drawMaterialCubes) {
 		// Diffuse map / Specular map cube
@@ -617,12 +672,11 @@ void render(double deltaTime) {
 		shader_color_phong_materials.setVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
 		shader_color_phong_materials.setVec3("material.specular", glm::vec3(1.0f, 0.5f, 0.31f));
 		shader_color_phong_materials.setVec3("material.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-		shader_color_phong_materials.setFloat("material.shininess", (float)shininess);
+		shader_color_phong_materials.setFloat("material.shininess", (float)materialCubeShininess);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		Shader::release();
-		glBindVertexArray(0);
+		resetOpenGLObjectsState();
 	}
 	if (drawLights) {
 		glBindVertexArray(VAO_Cube);
@@ -660,10 +714,29 @@ void render(double deltaTime) {
 			}
 		}
 
-		Shader::release();
-		glBindVertexArray(0);
+		resetOpenGLObjectsState();
 	}
 
+	if (drawGrid) {
+		glBindVertexArray(VAO_Grid);
+
+		Shader& shader_color_uniform_simple = shaders.find("shader_color_uniform_simple")->second;
+		shader_color_uniform_simple.use();
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::scale(model, glm::vec3(gridSize/2, gridSize/2, gridSize/2));
+		shader_color_uniform_simple.setMatrixFloat4v("model", 1, model);
+		shader_color_uniform_simple.setMatrixFloat4v("view", 1, view);
+		shader_color_uniform_simple.setMatrixFloat4v("projection", 1, projection);
+		shader_color_uniform_simple.setFloat4("ourColor", 0.7f, 0.7f, 0.7f, 1.0f);
+
+		glLineWidth(1.0f);
+		// TODO: pabo
+		glDrawArrays(GL_LINES, 0, (gridIntervals + 1) * 6);
+		glLineWidth(2.0f);
+
+		resetOpenGLObjectsState();
+	}
 	// gizmo
 	if (drawGizmo) {
 		glViewport(10.0f, 10.0f, 100.0f, 100.0f);
@@ -693,10 +766,10 @@ void render(double deltaTime) {
 		shader_color_uniform.setVec3("lightPosition", glm::vec3(3.0f, 2.0, 5.0f));
 		shader_color_uniform.setVec3("viewPosition", glm::vec3(0.0f, 0.0f, -3.0f));
 
-		shader_color_uniform.setFloat("ambientStrength", ambientStrength);
-		shader_color_uniform.setFloat("specularStrength", specularStrength);
-		shader_color_uniform.setFloat("diffuseStrength", diffuseStrength);
-		shader_color_uniform.setFloat("shininess", (float)shininess);
+		shader_color_uniform.setFloat("ambientStrength", gizmoAmbientStrength);
+		shader_color_uniform.setFloat("specularStrength", gizmoSpecularStrength);
+		shader_color_uniform.setFloat("diffuseStrength", gizmoDiffuseStrength);
+		shader_color_uniform.setFloat("shininess", (float)gizmoShininess);
 
 		shader_color_uniform.setFloat4("ourColor", 0.7f, 0.7f, 0.7f, 1.0f);
 
@@ -751,8 +824,7 @@ void render(double deltaTime) {
 		shader_color_uniform.setFloat4("ourColor", 0.0f, 0.0f, 1.0f, 1.0f);
 		glDrawArrays(GL_LINES, 0, 6);
 
-		Shader::release();
-		glBindVertexArray(0);
+		resetOpenGLObjectsState();
 
 		glViewport(0, 0, mode->width, mode->height);
 		glDepthFunc(GL_LESS);
@@ -767,14 +839,43 @@ void render(double deltaTime) {
 	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_None);
-	if (ImGui::CollapsingHeader("Colors")) {
+
+
+	if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
+		ImGui::Checkbox("Perspective?", &camera.IsPerspective);
+		ImGui::SliderFloat("FOV", &camera.FOV, 10.0f, 180.0f);
+		ImGui::DragFloat("Ortho Factor", &camera.OrthographicFactor, 0.1f, 1.0f, 10.0f);
+		ImGui::SliderFloat("Speed", &camera.MovementSpeed, 1.0f, 20.f);
+		ImGui::Text("Position: (%.2f, %.2f, %.2f)", camera.Position.x, camera.Position.y, camera.Position.z);
+		ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", camera.Front.x, camera.Front.y, camera.Front.z);
+	}
+
+	if (ImGui::CollapsingHeader("Draws", ImGuiTreeNodeFlags_DefaultOpen)) {
+		ImGui::Checkbox("Draw Plane?", &drawPlane);
+		ImGui::Checkbox("Draw Textured Cubes?", &drawTexturedCubes);
+		ImGui::Checkbox("Draw Material Cubes?", &drawMaterialCubes);
+		ImGui::Checkbox("Draw Lights?", &drawLights);
+
+		ImGui::Checkbox("Draw Grid?", &drawGrid);
+		if (ImGui::DragInt("Grid Intervals", &gridIntervals, 1.0f, 2.0f, 100.0f)) {
+			updateGrid();
+		}
+		ImGui::DragFloat("Grid Size", &gridSize, 0.1f, 1.0f, 100.0f);
+
+		ImGui::DragFloat3("Plane position", &planePosition[0], 0.1f, -10.0f, 10.0f);
+	}
+
+	if (ImGui::CollapsingHeader("Colors & Gizmo")) {
 		ImGui::ColorEdit3("Background color", &backgroundColor[0], ImGuiColorEditFlags_Float);
-		ImGui::ColorEdit3("Light color", &lightColor[0], ImGuiColorEditFlags_Float);
-		ImGui::DragFloat3("Light position", &lightPosition[0], 0.1f, -10.0f, 10.0f);
-		ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.0f, 1.0f, "%.2f");
-		ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f, "%.2f");
-		ImGui::SliderFloat("Diffuse Strength", &diffuseStrength, 0.0f, 1.0f, "%.2f");
-		ImGui::SliderInt("Shininess", &shininess, 2, 256);
+		ImGui::SliderInt("Shininess Textured Cube", &texturedCubeShininess, 2, 256);
+		ImGui::SliderInt("Shininess Material Cube", &materialCubeShininess, 2, 256);
+		if (ImGui::TreeNodeEx("Gizmo", ImGuiTreeNodeFlags_DefaultOpen)) {
+			ImGui::SliderFloat("Ambient Strength", &gizmoAmbientStrength, 0.0f, 1.0f, "%.2f");
+			ImGui::SliderFloat("Specular Strength", &gizmoSpecularStrength, 0.0f, 1.0f, "%.2f");
+			ImGui::SliderFloat("Diffuse Strength", &gizmoDiffuseStrength, 0.0f, 1.0f, "%.2f");
+			ImGui::SliderInt("Shininess", &gizmoShininess, 2, 256);
+			ImGui::TreePop();
+		}
 	}
 
 	if (ImGui::CollapsingHeader("Lights", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -790,7 +891,6 @@ void render(double deltaTime) {
 			ImGui::TreePop();
 		}
 		if (ImGui::TreeNode("Point Lights")) {
-			// TODO: name
 			for (int i = 0; i < pointLights.size(); ++i) {
 				PointLight& pointLight = pointLights[i];
 				std::string text("Point Light [" + std::to_string(i) + "]");
@@ -843,30 +943,14 @@ void render(double deltaTime) {
 			ImGui::TreePop();
 		}
 	}
+	ImGui::End();
 
-	if (ImGui::CollapsingHeader("Draws", ImGuiTreeNodeFlags_DefaultOpen)) {
-		ImGui::Checkbox("Draw Plane?", &drawPlane);
-		ImGui::Checkbox("Draw Textured Cubes?", &drawTexturedCubes);
-		ImGui::Checkbox("Draw Material Cubes?", &drawMaterialCubes);
-		ImGui::Checkbox("Draw Lights?", &drawLights);
-
-		ImGui::SliderFloat("Mix Value", &mixValue, 0.0f, 1.0f);
-
-		ImGui::DragFloat3("Plane position", &planePosition[0], 0.1f, -10.0f, 10.0f);
-
-		ImGui::Separator();
-		ImGui::SliderFloat("FOV", &camera.FOV, 10.0f, 180.0f);
-		ImGui::Checkbox("Is perspective?", &camera.IsPerspective);
-		//ImGui::DragFloat4("Ortho (L,R,B,T)", &camera.OrthographicFactor[0], 0.1f, -20.0f, 20.0f);
-		ImGui::SliderFloat("Ortho Factor", &camera.OrthographicFactor, 1.0f, 10.0f);
-		ImGui::DragFloat("Ortho Factorr", &camera.OrthographicFactor, 0.1f, 1.0f, 10.0f);
-		ImGui::SliderFloat("Camera Speed", &camera.MovementSpeed, 1.0f, 20.f);
-		ImGui::Text("Camera: (%.2f, %.2f, %.2f)", camera.Position.x, camera.Position.y, camera.Position.z);
-
-		ImGui::Separator();
-
+	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Performance", nullptr, ImGuiWindowFlags_None);
+	{
 		static std::vector<float> values(100, 0);
-		values.push_back(deltaTime * 1000);
+		values.push_back(1000.0f / ImGui::GetIO().Framerate);
 		if (values.size() > 100) {
 			values.erase(values.begin());
 		}
@@ -876,6 +960,10 @@ void render(double deltaTime) {
 		ImGui::PlotLines("Frame times", values.data(), 100, 0.0f, buff, 0.0f, 20.0f, ImVec2(0, 80));
 		//https://stackoverflow.com/questions/28530798/how-to-make-a-basic-fps-counter
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+		// Render Time
+
+		// Swap Time
 	}
 	ImGui::End();
 
@@ -887,9 +975,11 @@ void cleanUp() {
 	glDeleteVertexArrays(1, &VAO_Plane);
 	glDeleteVertexArrays(1, &VAO_Cube);
 	glDeleteVertexArrays(1, &VAO_Line);
+	glDeleteVertexArrays(1, &VAO_Grid);
 	glDeleteBuffers(1, &VBO_Plane);
 	glDeleteBuffers(1, &VBO_Cube);
 	glDeleteBuffers(1, &VBO_Line);
+	glDeleteBuffers(1, &VBO_Grid);
 	glDeleteBuffers(1, &EBO_Plane);
 
 	glDeleteTextures(5, &textures[0]);
@@ -951,7 +1041,7 @@ void processInput(GLFWwindow* window, double deltaTime) {
 
 	// Additional checks to ignore clicks on ImGui windows
 	if (isMiddleMousePressed && lastMiddleClick && !ImGui::IsAnyWindowHovered() && !ImGui::IsAnyItemHovered()) {
-		camera.processMouseMovement2(deltaTime, deltaX, deltaY);
+		camera.processMouseMovementDrag(deltaTime, deltaX, deltaY);
 	}
 
 	lastMousePosX = currentMousePosX;
