@@ -59,8 +59,9 @@ float keyRepeatSpacing = 0.05f;
 bool keys[350] = { false };
 
 // OpenGL
-unsigned int VAO[2], VBO[2], EBO[1];
-unsigned int VAOGizmo[2], VBOGizmo[1];
+unsigned int VAO_Plane, VAO_Cube, VAO_Line;
+unsigned int VBO_Plane, VBO_Cube, VBO_Line;
+unsigned int EBO_Plane;
 std::map<std::string, Shader> shaders;
 
 unsigned int texture_container;
@@ -89,7 +90,7 @@ bool	drawPlane = true;
 bool	drawTexturedCubes = true;
 bool	drawMaterialCubes = true;
 bool	drawLights = true;
-bool	drawGizmo = false;
+bool	drawGizmo = true;
 float	mixValue = 0.0f;
 
 Camera camera(glm::vec3(0.0f, 2.5f, 10.0f));
@@ -219,19 +220,21 @@ int main() {
 }
 
 void createOpenGLObjects() {
-	glGenVertexArrays(2, VAO);
-	glGenVertexArrays(2, VAOGizmo);
-	glGenBuffers(2, VBO);
-	glGenBuffers(1, VBOGizmo);
-	glGenBuffers(1, EBO);
+	glGenVertexArrays(1, &VAO_Plane);
+	glGenVertexArrays(1, &VAO_Cube);
+	glGenVertexArrays(1, &VAO_Line);
+	glGenBuffers(1, &VBO_Plane);
+	glGenBuffers(1, &VBO_Cube);
+	glGenBuffers(1, &VBO_Line);
+	glGenBuffers(1, &EBO_Plane);
 
 	// PLANE
-	glBindVertexArray(VAO[0]);
+	glBindVertexArray(VAO_Plane);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_Plane);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesTexturedRectangle), verticesTexturedRectangle, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_Plane);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesTexturedRectangle), indicesTexturedRectangle, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
@@ -251,9 +254,9 @@ void createOpenGLObjects() {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	// CUBE
-	glBindVertexArray(VAO[1]);
+	glBindVertexArray(VAO_Cube);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_Cube);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCube), verticesCube, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -266,29 +269,13 @@ void createOpenGLObjects() {
 	glEnableVertexAttribArray(3);
 
 	// Gizmo
-	glBindVertexArray(VAOGizmo[0]);
+	glBindVertexArray(VAO_Line);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCube), verticesCube, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
-	glEnableVertexAttribArray(3);
-
-	glBindVertexArray(VAOGizmo[1]);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBOGizmo[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_Line);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesLine), verticesLine, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-
-
 
 	// Unbind
 	glBindVertexArray(0);
@@ -546,7 +533,7 @@ void render(double deltaTime) {
 	//////////////////////////////////////////////////////////////
 	// Render OpenGL
 	if (drawPlane) {
-		glBindVertexArray(VAO[0]);
+		glBindVertexArray(VAO_Plane);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture_container);
 		glActiveTexture(GL_TEXTURE1);
@@ -584,7 +571,7 @@ void render(double deltaTime) {
 			glm::vec3(-1.3f,  6.0f, -1.5f)
 		};
 
-		glBindVertexArray(VAO[1]);
+		glBindVertexArray(VAO_Cube);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture_container2);
 		glActiveTexture(GL_TEXTURE1);
@@ -614,7 +601,7 @@ void render(double deltaTime) {
 	}
 	if (drawMaterialCubes) {
 		// Diffuse map / Specular map cube
-		glBindVertexArray(VAO[1]);
+		glBindVertexArray(VAO_Cube);
 
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(-2.0f, 2.0f, -5.0f));
@@ -638,7 +625,7 @@ void render(double deltaTime) {
 		glBindVertexArray(0);
 	}
 	if (drawLights) {
-		glBindVertexArray(VAO[1]);
+		glBindVertexArray(VAO_Cube);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture_redstoneLamp);
@@ -682,7 +669,7 @@ void render(double deltaTime) {
 		glViewport(10.0f, 10.0f, 100.0f, 100.0f);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
-		glBindVertexArray(VAOGizmo[0]);
+		glBindVertexArray(VAO_Cube);
 
 		Shader& shader_color_uniform = shaders.find("shader_color_uniform")->second;
 		shader_color_uniform.use();
@@ -742,7 +729,7 @@ void render(double deltaTime) {
 		shader_color_uniform.setFloat4("ourColor", 0.0f, 0.0f, 1.0f, 1.0f);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		glBindVertexArray(VAOGizmo[1]);
+		glBindVertexArray(VAO_Line);
 
 		// x
 		model = glm::mat4(1.0f);
@@ -897,10 +884,14 @@ void render(double deltaTime) {
 }
 
 void cleanUp() {
-	glDeleteVertexArrays(2, VAO);
-	glDeleteVertexArrays(2, VAOGizmo);
-	glDeleteBuffers(2, VBO);
-	glDeleteBuffers(1, EBO);
+	glDeleteVertexArrays(1, &VAO_Plane);
+	glDeleteVertexArrays(1, &VAO_Cube);
+	glDeleteVertexArrays(1, &VAO_Line);
+	glDeleteBuffers(1, &VBO_Plane);
+	glDeleteBuffers(1, &VBO_Cube);
+	glDeleteBuffers(1, &VBO_Line);
+	glDeleteBuffers(1, &EBO_Plane);
+
 	glDeleteTextures(5, &textures[0]);
 
 	ImGui_ImplOpenGL3_Shutdown();
