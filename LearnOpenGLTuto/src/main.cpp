@@ -391,14 +391,10 @@ void createShaders() {
 }
 
 void update(double deltaTime) {
-	//spotLights[0]
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, spotLights[0].Position);
-	model = glm::rotate(model, (float)glm::radians(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
+
 }
 
 void resetOpenGLObjectsState() {
-	// TODO: functionize
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glActiveTexture(GL_TEXTURE1);
@@ -455,41 +451,41 @@ void render(double deltaTime) {
 	shader_texture_phong_materials.use();
 	shader_texture_phong_materials.setMatrixFloat4v("view", 1, view);
 	shader_texture_phong_materials.setMatrixFloat4v("projection", 1, projection);
-	shader_texture_phong_materials.setVec3("viewPosition", camera.Position);
+	shader_texture_phong_materials.setFloat3("viewPosition", camera.Position);
 
 	if (directionalLight.Enabled) {
-		shader_texture_phong_materials.setVec3("directionalLight.direction", directionalLight.Direction);
-		shader_texture_phong_materials.setVec3("directionalLight.ambient", directionalLight.Ambient);
-		shader_texture_phong_materials.setVec3("directionalLight.diffuse", directionalLight.Diffuse);
-		shader_texture_phong_materials.setVec3("directionalLight.specular", directionalLight.Specular);
+		shader_texture_phong_materials.setFloat3("directionalLight.direction", directionalLight.Direction);
+		shader_texture_phong_materials.setFloat3("directionalLight.ambient", directionalLight.Ambient);
+		shader_texture_phong_materials.setFloat3("directionalLight.diffuse", directionalLight.Diffuse);
+		shader_texture_phong_materials.setFloat3("directionalLight.specular", directionalLight.Specular);
 	}
 	else {
-		shader_texture_phong_materials.setVec3("directionalLight.direction", emptyVec3);
-		shader_texture_phong_materials.setVec3("directionalLight.ambient", emptyVec3);
-		shader_texture_phong_materials.setVec3("directionalLight.diffuse", emptyVec3);
-		shader_texture_phong_materials.setVec3("directionalLight.specular", emptyVec3);
+		shader_texture_phong_materials.setFloat3("directionalLight.direction", emptyVec3);
+		shader_texture_phong_materials.setFloat3("directionalLight.ambient", emptyVec3);
+		shader_texture_phong_materials.setFloat3("directionalLight.diffuse", emptyVec3);
+		shader_texture_phong_materials.setFloat3("directionalLight.specular", emptyVec3);
 	}
 
 	for (int i = 0; i < pointLights.size(); ++i) {
 		std::string index = std::to_string(i);
 		const auto& pointLight = pointLights[i];
 		if (pointLight.Enabled) {
-			shader_texture_phong_materials.setVec3("pointLights[" + index + "].position", pointLight.Position);
+			shader_texture_phong_materials.setFloat3("pointLights[" + index + "].position", pointLight.Position);
 			shader_texture_phong_materials.setFloat("pointLights[" + index + "].constant", pointLight.Constant);
 			shader_texture_phong_materials.setFloat("pointLights[" + index + "].linear", pointLight.Linear);
 			shader_texture_phong_materials.setFloat("pointLights[" + index + "].quadratic", pointLight.Quadratic);
-			shader_texture_phong_materials.setVec3("pointLights[" + index + "].ambient", pointLight.Ambient);
-			shader_texture_phong_materials.setVec3("pointLights[" + index + "].diffuse", pointLight.Diffuse);
-			shader_texture_phong_materials.setVec3("pointLights[" + index + "].specular", pointLight.Specular);
+			shader_texture_phong_materials.setFloat3("pointLights[" + index + "].ambient", pointLight.Ambient);
+			shader_texture_phong_materials.setFloat3("pointLights[" + index + "].diffuse", pointLight.Diffuse);
+			shader_texture_phong_materials.setFloat3("pointLights[" + index + "].specular", pointLight.Specular);
 		}
 		else {
-			shader_texture_phong_materials.setVec3("pointLights[" + index + "].position", emptyVec3);
+			shader_texture_phong_materials.setFloat3("pointLights[" + index + "].position", emptyVec3);
 			shader_texture_phong_materials.setFloat("pointLights[" + index + "].constant", 0.0f);
 			shader_texture_phong_materials.setFloat("pointLights[" + index + "].linear", 0.0f);
 			shader_texture_phong_materials.setFloat("pointLights[" + index + "].quadratic", 0.0f);
-			shader_texture_phong_materials.setVec3("pointLights[" + index + "].ambient", emptyVec3);
-			shader_texture_phong_materials.setVec3("pointLights[" + index + "].diffuse", emptyVec3);
-			shader_texture_phong_materials.setVec3("pointLights[" + index + "].specular", emptyVec3);
+			shader_texture_phong_materials.setFloat3("pointLights[" + index + "].ambient", emptyVec3);
+			shader_texture_phong_materials.setFloat3("pointLights[" + index + "].diffuse", emptyVec3);
+			shader_texture_phong_materials.setFloat3("pointLights[" + index + "].specular", emptyVec3);
 		}
 	}
 
@@ -497,28 +493,28 @@ void render(double deltaTime) {
 		std::string index = std::to_string(i);
 		const auto& spotLight = spotLights[i];
 		if (spotLight.Enabled) {
-			shader_texture_phong_materials.setVec3("spotLights[" + index + "].position", spotLight.Position);
-			shader_texture_phong_materials.setVec3("spotLights[" + index + "].direction", spotLight.Direction);
+			shader_texture_phong_materials.setFloat3("spotLights[" + index + "].position", spotLight.Position);
+			shader_texture_phong_materials.setFloat3("spotLights[" + index + "].direction", spotLight.Direction);
 			shader_texture_phong_materials.setFloat("spotLights[" + index + "].innerCutOff", spotLight.InnerCutOff);
 			shader_texture_phong_materials.setFloat("spotLights[" + index + "].outerCutOff", spotLight.OuterCutOff);
 			shader_texture_phong_materials.setFloat("spotLights[" + index + "].constant", spotLight.Constant);
 			shader_texture_phong_materials.setFloat("spotLights[" + index + "].linear", spotLight.Linear);
 			shader_texture_phong_materials.setFloat("spotLights[" + index + "].quadratic", spotLight.Quadratic);
-			shader_texture_phong_materials.setVec3("spotLights[" + index + "].ambient", spotLight.Ambient);
-			shader_texture_phong_materials.setVec3("spotLights[" + index + "].diffuse", spotLight.Diffuse);
-			shader_texture_phong_materials.setVec3("spotLights[" + index + "].specular", spotLight.Specular);
+			shader_texture_phong_materials.setFloat3("spotLights[" + index + "].ambient", spotLight.Ambient);
+			shader_texture_phong_materials.setFloat3("spotLights[" + index + "].diffuse", spotLight.Diffuse);
+			shader_texture_phong_materials.setFloat3("spotLights[" + index + "].specular", spotLight.Specular);
 		}
 		else {
-			shader_texture_phong_materials.setVec3("spotLights[" + index + "].position", emptyVec3);
-			shader_texture_phong_materials.setVec3("spotLights[" + index + "].direction", emptyVec3);
+			shader_texture_phong_materials.setFloat3("spotLights[" + index + "].position", emptyVec3);
+			shader_texture_phong_materials.setFloat3("spotLights[" + index + "].direction", emptyVec3);
 			shader_texture_phong_materials.setFloat("spotLights[" + index + "].innerCutOff", 0.0f);
 			shader_texture_phong_materials.setFloat("spotLights[" + index + "].outerCutOff", 0.0f);
 			shader_texture_phong_materials.setFloat("spotLights[" + index + "].constant", 0.0f);
 			shader_texture_phong_materials.setFloat("spotLights[" + index + "].linear", 0.0f);
 			shader_texture_phong_materials.setFloat("spotLights[" + index + "].quadratic", 0.0f);
-			shader_texture_phong_materials.setVec3("spotLights[" + index + "].ambient", emptyVec3);
-			shader_texture_phong_materials.setVec3("spotLights[" + index + "].diffuse", emptyVec3);
-			shader_texture_phong_materials.setVec3("spotLights[" + index + "].specular", emptyVec3);
+			shader_texture_phong_materials.setFloat3("spotLights[" + index + "].ambient", emptyVec3);
+			shader_texture_phong_materials.setFloat3("spotLights[" + index + "].diffuse", emptyVec3);
+			shader_texture_phong_materials.setFloat3("spotLights[" + index + "].specular", emptyVec3);
 		}
 	}
 
@@ -526,41 +522,41 @@ void render(double deltaTime) {
 	shader_color_phong_materials.use();
 	shader_color_phong_materials.setMatrixFloat4v("view", 1, view);
 	shader_color_phong_materials.setMatrixFloat4v("projection", 1, projection);
-	shader_color_phong_materials.setVec3("viewPosition", camera.Position);
+	shader_color_phong_materials.setFloat3("viewPosition", camera.Position);
 
 	if (directionalLight.Enabled) {
-		shader_color_phong_materials.setVec3("directionalLight.direction", directionalLight.Direction);
-		shader_color_phong_materials.setVec3("directionalLight.ambient", directionalLight.Ambient);
-		shader_color_phong_materials.setVec3("directionalLight.diffuse", directionalLight.Diffuse);
-		shader_color_phong_materials.setVec3("directionalLight.specular", directionalLight.Specular);
+		shader_color_phong_materials.setFloat3("directionalLight.direction", directionalLight.Direction);
+		shader_color_phong_materials.setFloat3("directionalLight.ambient", directionalLight.Ambient);
+		shader_color_phong_materials.setFloat3("directionalLight.diffuse", directionalLight.Diffuse);
+		shader_color_phong_materials.setFloat3("directionalLight.specular", directionalLight.Specular);
 	}
 	else {
-		shader_color_phong_materials.setVec3("directionalLight.direction", emptyVec3);
-		shader_color_phong_materials.setVec3("directionalLight.ambient", emptyVec3);
-		shader_color_phong_materials.setVec3("directionalLight.diffuse", emptyVec3);
-		shader_color_phong_materials.setVec3("directionalLight.specular", emptyVec3);
+		shader_color_phong_materials.setFloat3("directionalLight.direction", emptyVec3);
+		shader_color_phong_materials.setFloat3("directionalLight.ambient", emptyVec3);
+		shader_color_phong_materials.setFloat3("directionalLight.diffuse", emptyVec3);
+		shader_color_phong_materials.setFloat3("directionalLight.specular", emptyVec3);
 	}
 
 	for (int i = 0; i < pointLights.size(); ++i) {
 		std::string index = std::to_string(i);
 		const auto& pointLight = pointLights[i];
 		if (pointLight.Enabled) {
-			shader_color_phong_materials.setVec3("pointLights[" + index + "].position", pointLight.Position);
+			shader_color_phong_materials.setFloat3("pointLights[" + index + "].position", pointLight.Position);
 			shader_color_phong_materials.setFloat("pointLights[" + index + "].constant", pointLight.Constant);
 			shader_color_phong_materials.setFloat("pointLights[" + index + "].linear", pointLight.Linear);
 			shader_color_phong_materials.setFloat("pointLights[" + index + "].quadratic", pointLight.Quadratic);
-			shader_color_phong_materials.setVec3("pointLights[" + index + "].ambient", pointLight.Ambient);
-			shader_color_phong_materials.setVec3("pointLights[" + index + "].diffuse", pointLight.Diffuse);
+			shader_color_phong_materials.setFloat3("pointLights[" + index + "].ambient", pointLight.Ambient);
+			shader_color_phong_materials.setFloat3("pointLights[" + index + "].diffuse", pointLight.Diffuse);
 		}
 		else {
-			shader_color_phong_materials.setVec3("pointLights[" + index + "].specular", emptyVec3);
-			shader_color_phong_materials.setVec3("pointLights[" + index + "].position", emptyVec3);
+			shader_color_phong_materials.setFloat3("pointLights[" + index + "].specular", emptyVec3);
+			shader_color_phong_materials.setFloat3("pointLights[" + index + "].position", emptyVec3);
 			shader_color_phong_materials.setFloat("pointLights[" + index + "].constant", 0.0f);
 			shader_color_phong_materials.setFloat("pointLights[" + index + "].linear", 0.0f);
 			shader_color_phong_materials.setFloat("pointLights[" + index + "].quadratic", 0.0f);
-			shader_color_phong_materials.setVec3("pointLights[" + index + "].ambient", emptyVec3);
-			shader_color_phong_materials.setVec3("pointLights[" + index + "].diffuse", emptyVec3);
-			shader_color_phong_materials.setVec3("pointLights[" + index + "].specular", emptyVec3);
+			shader_color_phong_materials.setFloat3("pointLights[" + index + "].ambient", emptyVec3);
+			shader_color_phong_materials.setFloat3("pointLights[" + index + "].diffuse", emptyVec3);
+			shader_color_phong_materials.setFloat3("pointLights[" + index + "].specular", emptyVec3);
 		}
 	}
 
@@ -568,28 +564,28 @@ void render(double deltaTime) {
 		std::string index = std::to_string(i);
 		const auto& spotLight = spotLights[i];
 		if (spotLight.Enabled) {
-			shader_color_phong_materials.setVec3("spotLights[" + index + "].position", spotLight.Position);
-			shader_color_phong_materials.setVec3("spotLights[" + index + "].direction", spotLight.Direction);
+			shader_color_phong_materials.setFloat3("spotLights[" + index + "].position", spotLight.Position);
+			shader_color_phong_materials.setFloat3("spotLights[" + index + "].direction", spotLight.Direction);
 			shader_color_phong_materials.setFloat("spotLights[" + index + "].innerCutOff", spotLight.InnerCutOff);
 			shader_color_phong_materials.setFloat("spotLights[" + index + "].outerCutOff", spotLight.OuterCutOff);
 			shader_color_phong_materials.setFloat("spotLights[" + index + "].constant", spotLight.Constant);
 			shader_color_phong_materials.setFloat("spotLights[" + index + "].linear", spotLight.Linear);
 			shader_color_phong_materials.setFloat("spotLights[" + index + "].quadratic", spotLight.Quadratic);
-			shader_color_phong_materials.setVec3("spotLights[" + index + "].ambient", spotLight.Ambient);
-			shader_color_phong_materials.setVec3("spotLights[" + index + "].diffuse", spotLight.Diffuse);
+			shader_color_phong_materials.setFloat3("spotLights[" + index + "].ambient", spotLight.Ambient);
+			shader_color_phong_materials.setFloat3("spotLights[" + index + "].diffuse", spotLight.Diffuse);
 		}
 		else {
-			shader_color_phong_materials.setVec3("spotLights[" + index + "].specular", emptyVec3);
-			shader_color_phong_materials.setVec3("spotLights[" + index + "].position", emptyVec3);
-			shader_color_phong_materials.setVec3("spotLights[" + index + "].direction", emptyVec3);
+			shader_color_phong_materials.setFloat3("spotLights[" + index + "].specular", emptyVec3);
+			shader_color_phong_materials.setFloat3("spotLights[" + index + "].position", emptyVec3);
+			shader_color_phong_materials.setFloat3("spotLights[" + index + "].direction", emptyVec3);
 			shader_color_phong_materials.setFloat("spotLights[" + index + "].innerCutOff", 0.0f);
 			shader_color_phong_materials.setFloat("spotLights[" + index + "].outerCutOff", 0.0f);
 			shader_color_phong_materials.setFloat("spotLights[" + index + "].constant", 0.0f);
 			shader_color_phong_materials.setFloat("spotLights[" + index + "].linear", 0.0f);
 			shader_color_phong_materials.setFloat("spotLights[" + index + "].quadratic", 0.0f);
-			shader_color_phong_materials.setVec3("spotLights[" + index + "].ambient", emptyVec3);
-			shader_color_phong_materials.setVec3("spotLights[" + index + "].diffuse", emptyVec3);
-			shader_color_phong_materials.setVec3("spotLights[" + index + "].specular", emptyVec3);
+			shader_color_phong_materials.setFloat3("spotLights[" + index + "].ambient", emptyVec3);
+			shader_color_phong_materials.setFloat3("spotLights[" + index + "].diffuse", emptyVec3);
+			shader_color_phong_materials.setFloat3("spotLights[" + index + "].specular", emptyVec3);
 		}
 	}
 
@@ -674,9 +670,9 @@ void render(double deltaTime) {
 
 		shader_color_phong_materials.use();
 		shader_color_phong_materials.setMatrixFloat4v("model", 1, model);
-		shader_color_phong_materials.setVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
-		shader_color_phong_materials.setVec3("material.specular", glm::vec3(1.0f, 0.5f, 0.31f));
-		shader_color_phong_materials.setVec3("material.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+		shader_color_phong_materials.setFloat3("material.ambient", 1.0f, 0.5f, 0.31f);
+		shader_color_phong_materials.setFloat3("material.specular", 1.0f, 0.5f, 0.31f);
+		shader_color_phong_materials.setFloat3("material.diffuse", 0.5f, 0.5f, 0.5f);
 		shader_color_phong_materials.setFloat("material.shininess", (float)materialCubeShininess);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -696,7 +692,7 @@ void render(double deltaTime) {
 
 		for (auto const& pointLight : pointLights) {
 			if (pointLight.Enabled && pointLight.Visible) {
-				glm::mat4 model = glm::mat4(1.0f);
+				glm::mat4 model(1.0f);
 				model = glm::translate(model, pointLight.Position);
 				model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
 				shader_texture_simple.setMatrixFloat4v("model", 1, model);
@@ -707,7 +703,7 @@ void render(double deltaTime) {
 
 		for (auto const& spotLight : spotLights) {
 			if (spotLight.Enabled && spotLight.Visible) {
-				glm::mat4 model = glm::mat4(1.0f);
+				glm::mat4 model(1.0f);
 				model = glm::translate(model, spotLight.Position);
 				model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
 				// TODO
@@ -728,7 +724,7 @@ void render(double deltaTime) {
 		Shader& shader_color_uniform_simple = shaders.find("shader_color_uniform_simple")->second;
 		shader_color_uniform_simple.use();
 
-		glm::mat4 model = glm::mat4(1.0f);
+		glm::mat4 model(1.0f);
 		model = glm::scale(model, glm::vec3(gridSize/2, gridSize/2, gridSize/2));
 		shader_color_uniform_simple.setMatrixFloat4v("model", 1, model);
 		shader_color_uniform_simple.setMatrixFloat4v("view", 1, view);
@@ -753,23 +749,23 @@ void render(double deltaTime) {
 		shader_color_uniform.use();
 
 		// Fixed postition so that camera position doesn't change render 
-		glm::mat4 viewGizmo = glm::mat4(view);
+		glm::mat4 viewGizmo(view);
 		viewGizmo[3][0] = 0.0f;
 		viewGizmo[3][1] = 0.0f;
 		viewGizmo[3][2] = -2.5f;
 		shader_color_uniform.setMatrixFloat4v("view", 1, viewGizmo);
 
-		glm::mat4 projectionGizmo = lerpProjectionMatrices(projectionPerspectiveGizmo, projectionOrthoGizmo, mixValue);
+		glm::mat4 projectionGizmo(lerpProjectionMatrices(projectionPerspectiveGizmo, projectionOrthoGizmo, mixValue));
 
 		shader_color_uniform.setMatrixFloat4v("projection", 1, projectionGizmo);
 
-		glm::mat4 model = glm::mat4(1.0f);
+		glm::mat4 model(1.0f);
 		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
 		shader_color_uniform.setMatrixFloat4v("model", 1, model);
 
-		shader_color_uniform.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-		shader_color_uniform.setVec3("lightPosition", glm::vec3(3.0f, 2.0, 5.0f));
-		shader_color_uniform.setVec3("viewPosition", glm::vec3(0.0f, 0.0f, -3.0f));
+		shader_color_uniform.setFloat3("lightColor", 1.0f, 1.0f, 1.0f);
+		shader_color_uniform.setFloat3("lightPosition", 3.0f, 2.0, 5.0f);
+		shader_color_uniform.setFloat3("viewPosition", 0.0f, 0.0f, -3.0f);
 
 		shader_color_uniform.setFloat("ambientStrength", gizmoAmbientStrength);
 		shader_color_uniform.setFloat("specularStrength", gizmoSpecularStrength);
@@ -969,7 +965,7 @@ void render(double deltaTime) {
 		//modeFullAxes = 0x0800,
 		//axesModeMask = 0xff00
 
-		static quat qRot = quat(1.f, 0.f, 0.f, 0.f);
+		static quat qRot(1.f, 0.f, 0.f, 0.f);
 		ImGui::gizmo3D("Spot light dir", spotLights[0].Direction /*, size,  mode */);
 
 		static std::vector<float> values(100, 0);
