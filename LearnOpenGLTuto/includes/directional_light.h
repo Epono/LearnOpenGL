@@ -28,7 +28,7 @@ public:
 		bool enabled = true,
 		bool visible = true) {
 
-		Direction = direction;
+		Direction = glm::normalize(direction);
 
 		Ambient = ambient;
 		Diffuse = diffuse;

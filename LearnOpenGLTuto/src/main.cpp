@@ -1,5 +1,4 @@
 // a glUniform value stays set until modified
-
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 
@@ -19,16 +18,16 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_interpolation.hpp>
 
-#include <stb_image/stb_image.h>
-
 #include <iostream>
 #include <vector>
 #include <map>
 #include <thread>
 
 #include <utils.h>
+#include <vertices.h>
 #include <shader.h>
 #include <camera.h>
+#include <model.h>
 #include <directional_light.h>
 #include <point_light.h>
 #include <spot_light.h>
@@ -79,6 +78,7 @@ std::vector<unsigned int> textures;
 glm::vec3 backgroundColor(0.089f, 0.089f, 0.108f);
 
 glm::vec3 planePosition(0.0f, 0.0f, -5.0f);
+glm::vec3 nanosuitPosition(0.0f, 1.0f, -5.0f);
 
 float	gizmoAmbientStrength = 0.1f;
 float	gizmoSpecularStrength = 0.5f;
@@ -98,6 +98,12 @@ float	gridSize = 50;
 bool	drawGizmo = true;
 float	mixValue = 0.0f;
 
+GLsizei gizmoWidth = 100.0f;
+GLsizei gizmoHeight = 100.0f;
+
+glm::mat4 projectionPerspectiveGizmo = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
+glm::mat4 projectionOrthoGizmo = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
+
 Camera camera(glm::vec3(0.0f, 2.5f, 10.0f));
 
 DirectionalLight directionalLight;
@@ -105,6 +111,8 @@ std::vector<PointLight> pointLights{ PointLight(glm::vec3(-2.5f, 5.0f, -5.0f)), 
 std::vector<SpotLight> spotLights{ SpotLight(glm::vec3(0.0f, 2.0f, -5.0f), glm::vec3(0.0f, -1.0f, 0.0f)) };
 
 std::unique_ptr<GLFWwindow, glfwDeleter> window;
+
+Model* nanosuit;
 
 int main() {
 	glfwInit();
@@ -180,7 +188,7 @@ int main() {
 	ImGui_ImplGlfw_InitForOpenGL(window.get(), true);
 	ImGui_ImplOpenGL3_Init(glsl_version.c_str());
 
-
+	nanosuit = new Model("assets/nanosuit/nanosuit.obj");
 
 	// https://gafferongames.com/post/fix_your_timestep/
 	int logicStepsPerSecond = 60;
@@ -334,22 +342,22 @@ void createOpenGLObjects() {
 }
 
 void createTextures() {
-	texture_container = createTexture("assets/container.jpg");
+	texture_container = createTexture("assets", "container.jpg");
 	textures.push_back(texture_container);
 
-	texture_awesomeface = createTexture("assets/awesomeface.png");
+	texture_awesomeface = createTexture("assets", "awesomeface.png");
 	textures.push_back(texture_awesomeface);
 
-	texture_redstoneLamp = createTexture("assets/redstone_lamp.png");
+	texture_redstoneLamp = createTexture("assets", "redstone_lamp.png");
 	textures.push_back(texture_redstoneLamp);
 
-	texture_container2 = createTexture("assets/container2.png");
+	texture_container2 = createTexture("assets", "container2.png");
 	textures.push_back(texture_container2);
 
-	texture_container2Specular = createTexture("assets/container2_specular.png");
+	texture_container2Specular = createTexture("assets", "container2_specular.png");
 	textures.push_back(texture_container2Specular);
 
-	texture_matrix = createTexture("assets/matrix.jpg");
+	texture_matrix = createTexture("assets", "matrix.jpg");
 	textures.push_back(texture_matrix);
 }
 
@@ -592,6 +600,17 @@ void render(double deltaTime) {
 	// Declared early that way I'm sure it exists
 	// Should still reset it every time though
 	glm::mat4 model = glm::mat4(1.0f);
+
+
+	//
+	shader_texture_phong_materials.use();
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, nanosuitPosition);
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+	shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
+	nanosuit->Draw(shader_texture_phong_materials);
+	//
 
 	//////////////////////////////////////////////////////////////
 	// Render OpenGL
@@ -865,6 +884,7 @@ void render(double deltaTime) {
 		ImGui::DragFloat("Grid Size", &gridSize, 0.1f, 1.0f, 100.0f);
 
 		ImGui::DragFloat3("Plane position", &planePosition[0], 0.1f, -10.0f, 10.0f);
+		ImGui::DragFloat3("Nano position", &nanosuitPosition[0], 0.1f, -10.0f, 10.0f);
 	}
 
 	if (ImGui::CollapsingHeader("Colors & Gizmo")) {

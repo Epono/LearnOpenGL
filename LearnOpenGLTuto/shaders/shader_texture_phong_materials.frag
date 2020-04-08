@@ -3,6 +3,8 @@ struct Material {
 	sampler2D diffuse;
 	sampler2D specular;
 	sampler2D emission;
+	sampler2D normal;
+	sampler2D height;
 	float shininess;
 };
 
@@ -149,6 +151,8 @@ vec3 computeSpotLight(SpotLight light, vec3 fragNormal, vec3 fragPosition, vec3 
 // TODO: Lots of optimization (ambient + ?)
 void main()
 {
+//	FragColor = texture(material.diffuse, TexCoord) + texture(material.specular, TexCoord);
+
 	vec3 fragNormal = normalize(FragNormal);
 	vec3 viewDirection = normalize(viewPosition - FragPosition);
 	vec3 result = vec3(0.0, 0.0, 0.0);

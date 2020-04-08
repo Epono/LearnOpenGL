@@ -1,5 +1,8 @@
 #include <shader.h>
 
+#include <glad/glad.h>
+#include <glm/gtc/type_ptr.hpp>
+
 Shader::Shader(const char* vertexPath, const char* fragmentPath) {
 	std::string vertexCode, fragmentCode;
 	std::ifstream vShaderFile, fShaderFile;
