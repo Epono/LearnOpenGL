@@ -113,6 +113,8 @@ std::vector<SpotLight> spotLights{ SpotLight(glm::vec3(0.0f, 2.0f, -5.0f), glm::
 std::unique_ptr<GLFWwindow, glfwDeleter> window;
 
 Model* nanosuit;
+Model* cat;
+Model* transportShuttle;
 
 int main() {
 	glfwInit();
@@ -189,6 +191,8 @@ int main() {
 	ImGui_ImplOpenGL3_Init(glsl_version.c_str());
 
 	nanosuit = new Model("assets/nanosuit/nanosuit.obj");
+	cat = new Model("assets/cat/cat.obj");
+	transportShuttle = new Model("assets/Transport Shuttle/Transport Shuttle_obj.obj");
 
 	// https://gafferongames.com/post/fix_your_timestep/
 	int logicStepsPerSecond = 60;
@@ -606,10 +610,23 @@ void render(double deltaTime) {
 	shader_texture_phong_materials.use();
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, nanosuitPosition);
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
 	shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
 	nanosuit->Draw(shader_texture_phong_materials);
+
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 0.5f, -2.0f));
+	model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
+	//cat->Draw(shader_texture_phong_materials);
+
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 0.5f, -2.0f));
+	//model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+	//model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
+	transportShuttle->Draw(shader_texture_phong_materials);
 	//
 
 	//////////////////////////////////////////////////////////////
@@ -744,7 +761,7 @@ void render(double deltaTime) {
 		shader_color_uniform_simple.use();
 
 		glm::mat4 model(1.0f);
-		model = glm::scale(model, glm::vec3(gridSize/2, gridSize/2, gridSize/2));
+		model = glm::scale(model, glm::vec3(gridSize / 2, gridSize / 2, gridSize / 2));
 		shader_color_uniform_simple.setMatrixFloat4v("model", 1, model);
 		shader_color_uniform_simple.setMatrixFloat4v("view", 1, view);
 		shader_color_uniform_simple.setMatrixFloat4v("projection", 1, projection);
