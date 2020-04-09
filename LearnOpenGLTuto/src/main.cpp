@@ -115,6 +115,7 @@ std::unique_ptr<GLFWwindow, glfwDeleter> window;
 Model* nanosuit;
 Model* cat;
 Model* transportShuttle;
+Model* container;
 
 int main() {
 	glfwInit();
@@ -191,8 +192,9 @@ int main() {
 	ImGui_ImplOpenGL3_Init(glsl_version.c_str());
 
 	nanosuit = new Model("assets/nanosuit/nanosuit.obj");
-	cat = new Model("assets/cat/cat.obj");
-	transportShuttle = new Model("assets/Transport Shuttle/Transport Shuttle_obj.obj");
+	//cat = new Model("assets/cat/cat.obj");
+	//transportShuttle = new Model("assets/Transport Shuttle/Transport Shuttle_obj.obj");
+	container = new Model("assets/Container/Container.obj");
 
 	// https://gafferongames.com/post/fix_your_timestep/
 	int logicStepsPerSecond = 60;
@@ -621,12 +623,19 @@ void render(double deltaTime) {
 	shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
 	//cat->Draw(shader_texture_phong_materials);
 
+	//model = glm::mat4(1.0f);
+	//model = glm::translate(model, glm::vec3(0.0f, 0.5f, -2.0f));
+	////model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+	////model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	//shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
+	//transportShuttle->Draw(shader_texture_phong_materials);
+
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, 0.5f, -2.0f));
-	//model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+	model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
 	//model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
-	transportShuttle->Draw(shader_texture_phong_materials);
+	container->Draw(shader_texture_phong_materials);
 	//
 
 	//////////////////////////////////////////////////////////////
