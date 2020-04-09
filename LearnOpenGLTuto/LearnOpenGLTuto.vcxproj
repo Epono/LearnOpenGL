@@ -75,6 +75,7 @@
     <LibraryPath>$(SolutionDir)/Libs/x86;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
+    <ReferencePath>$(ReferencePath)</ReferencePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -82,6 +83,7 @@
     <LibraryPath>$(SolutionDir)/Libs/x64;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
+    <ReferencePath>$(ReferencePath)</ReferencePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -89,6 +91,7 @@
     <LibraryPath>$(SolutionDir)/Libs/x86;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
+    <ReferencePath>$(ReferencePath)</ReferencePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -96,6 +99,7 @@
     <LibraryPath>$(SolutionDir)/Libs/x64;$(LibraryPath)</LibraryPath>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
+    <ReferencePath>$(ReferencePath)</ReferencePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
