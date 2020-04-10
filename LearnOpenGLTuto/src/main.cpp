@@ -90,7 +90,7 @@ int materialCubeShininess = 32;
 
 bool	drawPlane = true;
 bool	drawTexturedCubes = true;
-bool	drawMaterialCubes = true;
+bool	drawMaterialCubes = false;
 bool	drawLights = true;
 bool	drawGrid = true;
 int		gridIntervals = 50;
@@ -116,6 +116,11 @@ Model* nanosuit;
 Model* cat;
 Model* transportShuttle;
 Model* container;
+Model* container1;
+Model* container2;
+Model* container_triangulate;
+Model* container_uv_a_donf;
+Model* container_forward_up_chelou;
 
 int main() {
 	glfwInit();
@@ -152,7 +157,8 @@ int main() {
 
 	// Culling
 	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
 
 	// Antialiasing (MSAA)
 	glEnable(GL_MULTISAMPLE);
@@ -192,9 +198,14 @@ int main() {
 	ImGui_ImplOpenGL3_Init(glsl_version.c_str());
 
 	nanosuit = new Model("assets/nanosuit/nanosuit.obj");
-	//cat = new Model("assets/cat/cat.obj");
+	//container1 = new Model("assets/container/container_-z_forward.obj");
+	//container2 = new Model("assets/container/container_z_forward.obj");
+	//container_triangulate = new Model("assets/container/container_triangulate.obj");
+	//container_uv_a_donf = new Model("assets/container/container_uv_a_donf_triangulate.obj");
+	container_forward_up_chelou = new Model("assets/container/container_forward_up_chelou.obj");
+	cat = new Model("assets/cat/cat.obj");
 	//transportShuttle = new Model("assets/Transport Shuttle/Transport Shuttle_obj.obj");
-	container = new Model("assets/Container/Container.obj");
+	//container = new Model("assets/container_advanced/Container.obj");
 
 	// https://gafferongames.com/post/fix_your_timestep/
 	int logicStepsPerSecond = 60;
@@ -320,14 +331,17 @@ void createOpenGLObjects() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_Cube);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCube), verticesCube, GL_STATIC_DRAW);
 
+	// Position
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+	// Normals
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(3);
+
+	// Tex Coords
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 	// GIZMO
 	glBindVertexArray(VAO_Line);
@@ -610,6 +624,7 @@ void render(double deltaTime) {
 
 	//
 	shader_texture_phong_materials.use();
+
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, nanosuitPosition);
 	model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
@@ -621,7 +636,7 @@ void render(double deltaTime) {
 	model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
 	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
-	//cat->Draw(shader_texture_phong_materials);
+	cat->Draw(shader_texture_phong_materials);
 
 	//model = glm::mat4(1.0f);
 	//model = glm::translate(model, glm::vec3(0.0f, 0.5f, -2.0f));
@@ -630,12 +645,36 @@ void render(double deltaTime) {
 	//shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
 	//transportShuttle->Draw(shader_texture_phong_materials);
 
+	//model = glm::mat4(1.0f);
+	//model = glm::translate(model, glm::vec3(0.0f, 0.5f, -2.0f));
+	//model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
+	////model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	//shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
+	//container->Draw(shader_texture_phong_materials);
+
+	//model = glm::mat4(1.0f);
+	//model = glm::translate(model, glm::vec3(-1.0f, 1.0f, -5.0f));
+	//model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+	//shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
+	//container1->Draw(shader_texture_phong_materials);
+
+	//model = glm::mat4(1.0f);
+	//model = glm::translate(model, glm::vec3(1.0f, 1.0f, -5.0f));
+	//model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+	//shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
+	//container2->Draw(shader_texture_phong_materials);
+
+	//model = glm::mat4(1.0f);
+	//model = glm::translate(model, glm::vec3(3.0f, 1.0f, -5.0f));
+	//model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+	//shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
+	//container_triangulate->Draw(shader_texture_phong_materials);
+
 	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.0f, 0.5f, -2.0f));
-	model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
-	//model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::translate(model, nanosuitPosition);
+	model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
 	shader_texture_phong_materials.setMatrixFloat4v("model", 1, model);
-	container->Draw(shader_texture_phong_materials);
+	container_forward_up_chelou->Draw(shader_texture_phong_materials);
 	//
 
 	//////////////////////////////////////////////////////////////

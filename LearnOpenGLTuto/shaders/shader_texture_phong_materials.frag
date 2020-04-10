@@ -171,4 +171,5 @@ void main()
 	}
 
 	FragColor = vec4(result, 1.0f);
+//	FragColor = vec4((fragNormal + 1)/2, 1.0f);
 }

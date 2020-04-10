@@ -1,6 +1,8 @@
 #include <model.h>
 #include <utils.h>
 
+#include <assimp/matrix4x4.h>
+
 Model::Model(const std::string& path) {
 	loadModel(path);
 }
@@ -13,7 +15,7 @@ void Model::Draw(const Shader& shader) {
 
 void Model::loadModel(const std::string& path) {
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_CalcTangentSpace);
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 		std::cout << "ERROR:ASSIMP::" << importer.GetErrorString() << std::endl;
@@ -46,9 +48,10 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
 		Vertex vertex;
 
-		//
+		// https://community.khronos.org/t/opengl-axis/61722
 		vertex.Position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
 		vertex.Normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+		//std::cout << vertex.Normal.x << ", " << vertex.Normal.y << ", " << vertex.Normal.z << std::endl;
 		if (mesh->HasTextureCoords(0)) {
 			vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
 		}
